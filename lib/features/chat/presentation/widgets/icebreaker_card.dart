@@ -14,15 +14,15 @@ class IcebreakerCard extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            AppColors.tertiary.withOpacity(0.15),
-            AppColors.primary.withOpacity(0.1),
+            AppColors.tertiary.withValues(alpha: 0.15),
+            AppColors.primary.withValues(alpha: 0.1),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(18),
         border: Border.all(
-          color: AppColors.primary.withOpacity(0.2),
+          color: AppColors.primary.withValues(alpha: 0.2),
         ),
       ),
       child: Row(

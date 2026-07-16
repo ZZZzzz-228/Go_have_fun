@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../shared/widgets/liquid_glass.dart';
 
 class ProfileStatCard extends StatelessWidget {
   final String icon;
@@ -15,12 +16,9 @@ class ProfileStatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return LiquidGlassCard(
+      borderRadius: 16,
       padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 10),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
-      ),
       child: Column(
         children: [
           Text(icon, style: const TextStyle(fontSize: 22)),

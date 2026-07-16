@@ -103,7 +103,7 @@ class _CoupleScreenState extends State<CoupleScreen>
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.primary.withOpacity(0.4),
+                      color: AppColors.primary.withValues(alpha: 0.4),
                       blurRadius: 24,
                       offset: const Offset(0, 8),
                     ),
@@ -215,18 +215,18 @@ class _CoupleScreenState extends State<CoupleScreen>
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            AppColors.coupleGold.withOpacity(0.12),
-            AppColors.couplePink.withOpacity(0.08),
+            AppColors.coupleGold.withValues(alpha: 0.12),
+            AppColors.couplePink.withValues(alpha: 0.08),
           ],
         ),
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color: AppColors.coupleGold.withOpacity(0.4),
+          color: AppColors.coupleGold.withValues(alpha: 0.4),
           width: 2,
         ),
         boxShadow: [
           BoxShadow(
-            color: AppColors.coupleGold.withOpacity(0.1),
+            color: AppColors.coupleGold.withValues(alpha: 0.1),
             blurRadius: 30,
             spreadRadius: 5,
           ),
@@ -367,7 +367,7 @@ class _PersonAvatar extends StatelessWidget {
           child: avatar != null
               ? ClipOval(child: Image.network(avatar!, fit: BoxFit.cover))
               : const Center(
-                  child: Text('👤', style: TextStyle(fontSize: 30))),
+              child: Text('👤', style: TextStyle(fontSize: 30))),
         ),
         const SizedBox(height: 6),
         Text(

@@ -50,15 +50,16 @@ class BeaconSelector extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(
                       horizontal: 14, vertical: 8),
                   decoration: BoxDecoration(
+                    gradient: isSelected ? AppColors.primaryGradient : null,
                     color: isSelected
-                        ? AppColors.primary.withOpacity(0.15)
-                        : AppColors.surfaceVariant,
+                        ? null
+                        : Colors.white.withValues(alpha: 0.06),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
                       color: isSelected
-                          ? AppColors.primary
-                          : Colors.transparent,
-                      width: 1.5,
+                          ? Colors.white.withValues(alpha: 0.18)
+                          : Colors.white.withValues(alpha: 0.14),
+                      width: 1.2,
                     ),
                   ),
                   child: Row(
@@ -71,7 +72,7 @@ class BeaconSelector extends StatelessWidget {
                         Text(
                           status['text']!,
                           style: const TextStyle(
-                            color: AppColors.primary,
+                            color: Colors.white,
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
                           ),

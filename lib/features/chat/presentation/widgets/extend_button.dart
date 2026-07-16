@@ -19,10 +19,10 @@ class ExtendButton extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppColors.timerOrange.withOpacity(0.12),
+        color: AppColors.timerOrange.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: AppColors.timerOrange.withOpacity(0.4),
+          color: AppColors.timerOrange.withValues(alpha: 0.4),
         ),
       ),
       child: Row(
@@ -43,8 +43,8 @@ class ExtendButton extends StatelessWidget {
                 Text(
                   myWantsExtend
                       ? partnerWantsExtend
-                          ? '✅ Оба согласны! Продлено.'
-                          : '⏳ Ждём ответа партнёра...'
+                      ? '✅ Оба согласны! Продлено.'
+                      : '⏳ Ждём ответа партнёра...'
                       : 'Нажми — и партнёр увидит запрос',
                   style: const TextStyle(
                     color: AppColors.textSecondary,

@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/router/route_names.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/time_utils.dart';
+import '../../../../shared/widgets/liquid_glass.dart';
 import '../widgets/profile_photo_grid.dart';
 import '../widgets/profile_stat_card.dart';
 import '../widgets/beacon_selector.dart';
@@ -31,168 +32,176 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: CustomScrollView(
-        slivers: [
-          // ===== App Bar =====
-          SliverAppBar(
-            expandedHeight: 280,
-            pinned: true,
-            backgroundColor: AppColors.background,
-            actions: [
-              IconButton(
-                icon: const Icon(Icons.edit_outlined,
-                    color: AppColors.textPrimary),
-                onPressed: () => context.go(RouteNames.editProfile),
+      body: AppGradientBackground(
+        child: CustomScrollView(
+          slivers: [
+            // ===== App Bar =====
+            SliverAppBar(
+              expandedHeight: 280,
+              pinned: true,
+              backgroundColor: Colors.transparent,
+              actions: [
+                IconButton(
+                  icon: const Icon(Icons.edit_outlined, color: Colors.white),
+                  onPressed: () => context.go(RouteNames.editProfile),
+                ),
+                IconButton(
+                  icon: const Icon(
+                    Icons.settings_outlined,
+                    color: Colors.white,
+                  ),
+                  onPressed: () => _showSettings(),
+                ),
+              ],
+              flexibleSpace: FlexibleSpaceBar(
+                background: _buildProfileHeader(),
               ),
-              IconButton(
-                icon: const Icon(Icons.settings_outlined,
-                    color: AppColors.textPrimary),
-                onPressed: () => _showSettings(),
-              ),
-            ],
-            flexibleSpace: FlexibleSpaceBar(
-              background: _buildProfileHeader(),
             ),
-          ),
 
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // ===== Имя и статус =====
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              '$_name, $_age',
-                              style: const TextStyle(
-                                color: AppColors.textPrimary,
-                                fontSize: 26,
-                                fontWeight: FontWeight.w800,
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // ===== Имя и статус =====
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                '$_name, $_age',
+                                style: const TextStyle(
+                                  color: AppColors.textPrimary,
+                                  fontSize: 26,
+                                  fontWeight: FontWeight.w800,
+                                ),
                               ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              'С нами с ${TimeUtils.formatJoinDate(_joinedAt)}',
-                              style: const TextStyle(
-                                color: AppColors.textSecondary,
-                                fontSize: 13,
+                              const SizedBox(height: 4),
+                              Text(
+                                'С нами с ${TimeUtils.formatJoinDate(_joinedAt)}',
+                                style: const TextStyle(
+                                  color: AppColors.textSecondary,
+                                  fontSize: 13,
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
+                        ),
+                        // Переключатель поиска
+                        _SearchToggle(
+                          isActive: _isSearchActive,
+                          onToggle: () => _toggleSearch(),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // ===== Биография =====
+                    if (_bio.isNotEmpty) ...[
+                      LiquidGlassCard(
+                        borderRadius: 16,
+                        padding: const EdgeInsets.all(14),
+                        child: Text(
+                          _bio,
+                          style: const TextStyle(
+                            color: AppColors.textPrimary,
+                            fontSize: 15,
+                            height: 1.5,
+                          ),
                         ),
                       ),
-                      // Переключатель поиска
-                      _SearchToggle(
-                        isActive: _isSearchActive,
-                        onToggle: () => _toggleSearch(),
-                      ),
+                      const SizedBox(height: 20),
                     ],
-                  ),
 
-                  const SizedBox(height: 16),
+                    // ===== Маяк-статус =====
+                    BeaconSelector(
+                      selectedEmoji: _selectedBeaconEmoji,
+                      selectedText: _selectedBeaconText,
+                      onSelected: (emoji, text) {
+                        setState(() {
+                          _selectedBeaconEmoji = emoji;
+                          _selectedBeaconText = text;
+                        });
+                      },
+                    ),
 
-                  // ===== Биография =====
-                  if (_bio.isNotEmpty) ...[
-                    Text(
-                      _bio,
-                      style: const TextStyle(
+                    const SizedBox(height: 24),
+
+                    // ===== Статистика =====
+                    const Text(
+                      'Моя статистика',
+                      style: TextStyle(
                         color: AppColors.textPrimary,
-                        fontSize: 15,
-                        height: 1.5,
+                        fontSize: 17,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: ProfileStatCard(
+                            icon: '🤝',
+                            label: 'Встреч',
+                            value: '$_meetingsCount',
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: ProfileStatCard(
+                            icon: '💬',
+                            label: 'Чатов',
+                            value: '$_chatsCount',
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: ProfileStatCard(
+                            icon: '📅',
+                            label: 'Дней с нами',
+                            value:
+                            '${DateTime.now().difference(_joinedAt).inDays}',
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 24),
+
+                    // ===== Переход к паре =====
+                    _buildCoupleSection(),
+
+                    const SizedBox(height: 24),
+
+                    // ===== Фото =====
+                    const Text(
+                      'Мои фото',
+                      style: TextStyle(
+                        color: AppColors.textPrimary,
+                        fontSize: 17,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    const ProfilePhotoGrid(photoUrls: []),
+
+                    const SizedBox(height: 32),
+
+                    // ===== Опасная зона =====
+                    _buildDangerZone(),
+
+                    const SizedBox(height: 32),
                   ],
-
-                  // ===== Маяк-статус =====
-                  BeaconSelector(
-                    selectedEmoji: _selectedBeaconEmoji,
-                    selectedText: _selectedBeaconText,
-                    onSelected: (emoji, text) {
-                      setState(() {
-                        _selectedBeaconEmoji = emoji;
-                        _selectedBeaconText = text;
-                      });
-                    },
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  // ===== Статистика =====
-                  const Text(
-                    'Моя статистика',
-                    style: TextStyle(
-                      color: AppColors.textPrimary,
-                      fontSize: 17,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: ProfileStatCard(
-                          icon: '🤝',
-                          label: 'Встреч',
-                          value: '$_meetingsCount',
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: ProfileStatCard(
-                          icon: '💬',
-                          label: 'Чатов',
-                          value: '$_chatsCount',
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: ProfileStatCard(
-                          icon: '📅',
-                          label: 'Дней с нами',
-                          value: '${DateTime.now().difference(_joinedAt).inDays}',
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  // ===== Переход к паре =====
-                  _buildCoupleSection(),
-
-                  const SizedBox(height: 24),
-
-                  // ===== Фото =====
-                  const Text(
-                    'Мои фото',
-                    style: TextStyle(
-                      color: AppColors.textPrimary,
-                      fontSize: 17,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  const ProfilePhotoGrid(photoUrls: []),
-
-                  const SizedBox(height: 32),
-
-                  // ===== Опасная зона =====
-                  _buildDangerZone(),
-
-                  const SizedBox(height: 32),
-                ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -203,9 +212,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       children: [
         // Фон с градиентом
         Container(
-          decoration: const BoxDecoration(
-            gradient: AppColors.primaryGradient,
-          ),
+          decoration: const BoxDecoration(gradient: AppColors.heroGradient),
         ),
         // Аватар
         Center(
@@ -218,8 +225,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 height: 100,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Colors.white.withOpacity(0.2),
+                  color: Colors.white.withValues(alpha: 0.2),
                   border: Border.all(color: Colors.white, width: 3),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.secondary.withValues(alpha: 0.5),
+                      blurRadius: 30,
+                      spreadRadius: 4,
+                    ),
+                  ],
                 ),
                 child: const Center(
                   child: Text('👤', style: TextStyle(fontSize: 48)),
@@ -235,20 +249,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _buildCoupleSection() {
     return GestureDetector(
       onTap: () => context.go(RouteNames.couple),
-      child: Container(
+      child: LiquidGlassCard(
+        borderRadius: 18,
         padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              AppColors.coupleGold.withOpacity(0.12),
-              AppColors.couplePink.withOpacity(0.08),
-            ],
-          ),
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(
-            color: AppColors.coupleGold.withOpacity(0.3),
-          ),
-        ),
+        tint: AppColors.coupleGold,
+        showGlow: true,
         child: const Row(
           children: [
             Text('💑', style: TextStyle(fontSize: 32)),
@@ -276,8 +281,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ],
               ),
             ),
-            Icon(Icons.chevron_right_rounded,
-                color: AppColors.textSecondary),
+            Icon(Icons.chevron_right_rounded, color: AppColors.textSecondary),
           ],
         ),
       ),
@@ -321,34 +325,45 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void _showSettings() {
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppColors.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
       builder: (_) => Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _SettingsTile(
-              icon: Icons.logout,
-              label: 'Выйти',
-              onTap: () {
-                Navigator.pop(context);
-                context.go(RouteNames.login);
-              },
-            ),
-            _SettingsTile(
-              icon: Icons.notifications_outlined,
-              label: 'Уведомления',
-              onTap: () {},
-            ),
-            _SettingsTile(
-              icon: Icons.shield_outlined,
-              label: 'Конфиденциальность',
-              onTap: () {},
-            ),
-          ],
+        padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+        child: LiquidGlassCard(
+          borderRadius: 28,
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 48,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.24),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              _SettingsTile(
+                icon: Icons.logout,
+                label: 'Выйти',
+                onTap: () {
+                  Navigator.pop(context);
+                  context.go(RouteNames.login);
+                },
+              ),
+              _SettingsTile(
+                icon: Icons.notifications_outlined,
+                label: 'Уведомления',
+                onTap: () {},
+              ),
+              _SettingsTile(
+                icon: Icons.shield_outlined,
+                label: 'Конфиденциальность',
+                onTap: () {},
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -360,8 +375,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
       builder: (_) => AlertDialog(
         backgroundColor: AppColors.surface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Удалить аккаунт?',
-            style: TextStyle(color: AppColors.textPrimary)),
+        title: const Text(
+          'Удалить аккаунт?',
+          style: TextStyle(color: AppColors.textPrimary),
+        ),
         content: const Text(
           'Все данные будут безвозвратно удалены. Действие нельзя отменить.',
           style: TextStyle(color: AppColors.textSecondary),
@@ -369,8 +386,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Отмена',
-                style: TextStyle(color: AppColors.textSecondary)),
+            child: const Text(
+              'Отмена',
+              style: TextStyle(color: AppColors.textSecondary),
+            ),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
@@ -401,11 +420,13 @@ class _SearchToggle extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
           color: isActive
-              ? AppColors.success.withOpacity(0.15)
-              : AppColors.surfaceVariant,
+              ? AppColors.success.withValues(alpha: 0.15)
+              : Colors.white.withValues(alpha: 0.06),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isActive ? AppColors.success : Colors.transparent,
+            color: isActive
+                ? AppColors.success
+                : Colors.white.withValues(alpha: 0.14),
           ),
         ),
         child: Row(
@@ -450,10 +471,14 @@ class _SettingsTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListTile(
       leading: Icon(icon, color: AppColors.textSecondary),
-      title: Text(label,
-          style: const TextStyle(color: AppColors.textPrimary, fontSize: 16)),
-      trailing: const Icon(Icons.chevron_right_rounded,
-          color: AppColors.textSecondary),
+      title: Text(
+        label,
+        style: const TextStyle(color: AppColors.textPrimary, fontSize: 16),
+      ),
+      trailing: const Icon(
+        Icons.chevron_right_rounded,
+        color: AppColors.textSecondary,
+      ),
       onTap: onTap,
       contentPadding: EdgeInsets.zero,
     );

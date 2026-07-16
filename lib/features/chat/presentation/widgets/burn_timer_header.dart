@@ -39,12 +39,12 @@ class BurnTimerHeader extends StatelessWidget {
       duration: const Duration(milliseconds: 500),
       decoration: BoxDecoration(
         color: _isBurning
-            ? AppColors.timerRed.withOpacity(0.08)
+            ? AppColors.timerRed.withValues(alpha: 0.08)
             : AppColors.surface,
         border: Border(
           bottom: BorderSide(
             color: _isBurning
-                ? AppColors.timerRed.withOpacity(0.3)
+                ? AppColors.timerRed.withValues(alpha: 0.3)
                 : AppColors.surfaceVariant,
           ),
         ),

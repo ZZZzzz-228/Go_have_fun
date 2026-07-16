@@ -20,12 +20,16 @@ class AppTheme {
     scaffoldBackgroundColor: AppColors.background,
     fontFamily: 'Gilroy',
     textTheme: AppTextStyles.darkTextTheme,
-    appBarTheme: AppBarTheme(
-      backgroundColor: AppColors.background,
+    appBarTheme: const AppBarTheme(
+      backgroundColor: Colors.transparent,
       elevation: 0,
       centerTitle: true,
       iconTheme: IconThemeData(color: AppColors.textPrimary),
-      titleTextStyle: AppTextStyles.darkTextTheme.titleLarge,
+      titleTextStyle: TextStyle(
+        color: AppColors.textPrimary,
+        fontSize: 20,
+        fontWeight: FontWeight.w700,
+      ),
     ),
     bottomNavigationBarTheme: BottomNavigationBarThemeData(
       backgroundColor: AppColors.surface,
@@ -33,6 +37,17 @@ class AppTheme {
       unselectedItemColor: AppColors.textSecondary,
       type: BottomNavigationBarType.fixed,
       elevation: 0,
+    ),
+    dialogTheme: DialogThemeData(
+      backgroundColor: AppColors.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+      ),
+    ),
+    tabBarTheme: const TabBarThemeData(
+      labelColor: AppColors.textPrimary,
+      unselectedLabelColor: AppColors.textSecondary,
+      indicatorColor: AppColors.primary,
     ),
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(

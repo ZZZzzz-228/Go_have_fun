@@ -86,7 +86,7 @@ class _CoupleStampScreenState extends State<CoupleStampScreen>
                   borderRadius: BorderRadius.circular(8),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.5),
+                      color: Colors.black.withValues(alpha: 0.5),
                       blurRadius: 30,
                       offset: const Offset(0, 10),
                     ),
@@ -146,10 +146,10 @@ class _CoupleStampScreenState extends State<CoupleStampScreen>
                     Row(
                       children: List.generate(
                         40,
-                        (_) => Expanded(
+                            (_) => Expanded(
                           child: Container(
                             height: 1,
-                            color: const Color(0xFFB0956A).withOpacity(0.3),
+                            color: const Color(0xFFB0956A).withValues(alpha: 0.3),
                           ),
                         ),
                       ),
@@ -180,10 +180,10 @@ class _CoupleStampScreenState extends State<CoupleStampScreen>
                     Row(
                       children: List.generate(
                         40,
-                        (_) => Expanded(
+                            (_) => Expanded(
                           child: Container(
                             height: 1,
-                            color: const Color(0xFFB0956A).withOpacity(0.3),
+                            color: const Color(0xFFB0956A).withValues(alpha: 0.3),
                           ),
                         ),
                       ),
@@ -242,10 +242,10 @@ class _CoupleStampScreenState extends State<CoupleStampScreen>
                   padding: const EdgeInsets.symmetric(
                       horizontal: 32, vertical: 14),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.1),
+                    color: Colors.white.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                        color: Colors.white.withOpacity(0.2)),
+                        color: Colors.white.withValues(alpha: 0.2)),
                   ),
                   child: const Row(
                     mainAxisSize: MainAxisSize.min,
@@ -315,7 +315,7 @@ class _PassportLine extends StatelessWidget {
     return Expanded(
       child: Container(
         height: 1,
-        color: const Color(0xFFB0956A).withOpacity(0.5),
+        color: const Color(0xFFB0956A).withValues(alpha: 0.5),
       ),
     );
   }

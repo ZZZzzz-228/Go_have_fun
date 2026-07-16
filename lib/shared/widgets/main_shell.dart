@@ -1,26 +1,67 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/router/route_names.dart';
 import '../../core/theme/app_colors.dart';
+import '../providers/chat_visibility_provider.dart';
 
-class MainShell extends StatelessWidget {
+class MainShell extends ConsumerWidget {
   final Widget child;
   const MainShell({super.key, required this.child});
 
-  int _getCurrentIndex(BuildContext context) {
+  int _getCurrentIndex(BuildContext context, bool showChats) {
     final location = GoRouterState.of(context).uri.toString();
     if (location.startsWith(RouteNames.map)) return 0;
-    if (location.startsWith(RouteNames.chatsList)) return 1;
-    if (location.startsWith(RouteNames.profile)) return 2;
-    if (location.startsWith(RouteNames.couple)) return 3;
+    if (showChats && location.startsWith(RouteNames.chatsList)) return 1;
+    if (location.startsWith(RouteNames.profile)) {
+      return showChats ? 2 : 1;
+    }
+    if (location.startsWith(RouteNames.couple)) {
+      return showChats ? 3 : 2;
+    }
     return 0;
   }
 
   @override
-  Widget build(BuildContext context) {
-    final currentIndex = _getCurrentIndex(context);
+  Widget build(BuildContext context, WidgetRef ref) {
+    // "Чаты" появляется в нав-баре только после того, как два пользователя
+    // "увиделись" и начали переписку — это не постоянная вкладка.
+    final showChats = ref.watch(chatVisibilityProvider);
+    final currentIndex = _getCurrentIndex(context, showChats);
+
+    final items = <_NavItem>[
+      _NavItem(
+        icon: Icons.location_on_outlined,
+        activeIcon: Icons.location_on,
+        label: 'карта',
+        isActive: currentIndex == 0,
+        onTap: () => context.go(RouteNames.map),
+      ),
+      if (showChats)
+        _NavItem(
+          icon: Icons.chat_bubble_outline_rounded,
+          activeIcon: Icons.chat_bubble_rounded,
+          label: 'чаты',
+          isActive: currentIndex == 1,
+          onTap: () => context.go(RouteNames.chatsList),
+        ),
+      _NavItem(
+        icon: Icons.person_outline_rounded,
+        activeIcon: Icons.person_rounded,
+        label: 'ты',
+        isActive: currentIndex == (showChats ? 2 : 1),
+        onTap: () => context.go(RouteNames.profile),
+      ),
+      _NavItem(
+        icon: Icons.favorite_outline_rounded,
+        activeIcon: Icons.favorite_rounded,
+        label: 'пара',
+        isActive: currentIndex == (showChats ? 3 : 2),
+        onTap: () => context.go(RouteNames.couple),
+      ),
+    ];
 
     return Scaffold(
       extendBody: true,
@@ -31,36 +72,7 @@ class MainShell extends StatelessWidget {
         child: _LiquidGlassBar(
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              _NavItem(
-                icon: Icons.location_on_outlined,
-                activeIcon: Icons.location_on,
-                label: 'карта',
-                isActive: currentIndex == 0,
-                onTap: () => context.go(RouteNames.map),
-              ),
-              _NavItem(
-                icon: Icons.chat_bubble_outline_rounded,
-                activeIcon: Icons.chat_bubble_rounded,
-                label: 'чаты',
-                isActive: currentIndex == 1,
-                onTap: () => context.go(RouteNames.chatsList),
-              ),
-              _NavItem(
-                icon: Icons.person_outline_rounded,
-                activeIcon: Icons.person_rounded,
-                label: 'ты',
-                isActive: currentIndex == 2,
-                onTap: () => context.go(RouteNames.profile),
-              ),
-              _NavItem(
-                icon: Icons.favorite_outline_rounded,
-                activeIcon: Icons.favorite_rounded,
-                label: 'пара',
-                isActive: currentIndex == 3,
-                onTap: () => context.go(RouteNames.couple),
-              ),
-            ],
+            children: items,
           ),
         ),
       ),
@@ -69,12 +81,7 @@ class MainShell extends StatelessWidget {
 }
 
 /// «Жидкое стекло» — блюр фона + прозрачные слои + мягкая подсветка по
-/// краям, имитирующая преломление света на стеклянной панели (в духе
-/// iOS "Liquid Glass"). Настоящий фрагментный шейдер с картой смещений
-/// (feDisplacementMap, как в вебе) в Flutter поверх реального фона
-/// панелей не используется — вместо этого линзу имитируют слои блюра,
-/// градиентов и бликов, что даёт очень похожий визуальный результат
-/// и работает стабильно на всех платформах.
+/// краям, имитирующая преломление света на стеклянной панели.
 class _LiquidGlassBar extends StatelessWidget {
   final Widget child;
   const _LiquidGlassBar({required this.child});
@@ -94,19 +101,19 @@ class _LiquidGlassBar extends StatelessWidget {
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                Colors.white.withOpacity(0.10),
-                const Color(0xFF14141A).withOpacity(0.58),
-                const Color(0xFF14141A).withOpacity(0.82),
+                AppColors.primary.withValues(alpha: 0.14),
+                const Color(0xFF14091F).withValues(alpha: 0.72),
+                const Color(0xFF0A0514).withValues(alpha: 0.92),
               ],
               stops: const [0.0, 0.45, 1.0],
             ),
             border: Border.all(
-              color: Colors.white.withOpacity(0.16),
+              color: AppColors.glassBorder,
               width: 1.2,
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.35),
+                color: Colors.black.withValues(alpha: 0.35),
                 blurRadius: 24,
                 offset: const Offset(0, 8),
               ),
@@ -126,7 +133,7 @@ class _LiquidGlassBar extends StatelessWidget {
                     gradient: LinearGradient(
                       colors: [
                         Colors.transparent,
-                        Colors.white.withOpacity(0.55),
+                        Colors.white.withValues(alpha: 0.55),
                         Colors.transparent,
                       ],
                     ),
@@ -159,7 +166,7 @@ class _NavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = isActive ? Colors.white : const Color(0xFF7A7A85);
+    final color = isActive ? Colors.white : const Color(0xFF8B7AA8);
     return Expanded(
       child: GestureDetector(
         onTap: onTap,

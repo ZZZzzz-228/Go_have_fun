@@ -78,7 +78,7 @@ class _ChatExpiredScreenState extends State<ChatExpiredScreen>
                       center: Alignment.center,
                       radius: 1.2,
                       colors: [
-                        AppColors.timerRed.withOpacity(0.35 * _fadeAnim.value),
+                        AppColors.timerRed.withValues(alpha: 0.35 * _fadeAnim.value),
                         AppColors.background,
                       ],
                     ),
@@ -156,7 +156,7 @@ class _ChatExpiredScreenState extends State<ChatExpiredScreen>
                                 boxShadow: [
                                   BoxShadow(
                                     color: AppColors.primary
-                                        .withOpacity(0.4),
+                                        .withValues(alpha: 0.4),
                                     blurRadius: 24,
                                     offset: const Offset(0, 8),
                                   ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../shared/widgets/liquid_glass.dart';
 
 class SafeZoneInfoWidget extends StatelessWidget {
   final String name;
@@ -15,22 +16,17 @@ class SafeZoneInfoWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return LiquidGlassCard(
+      borderRadius: 16,
       padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: AppColors.safeZone.withOpacity(0.3),
-        ),
-      ),
+      tint: AppColors.safeZone,
       child: Row(
         children: [
           Container(
             width: 44,
             height: 44,
             decoration: BoxDecoration(
-              color: AppColors.safeZone.withOpacity(0.15),
+              color: AppColors.safeZone.withValues(alpha: 0.15),
               shape: BoxShape.circle,
             ),
             child: Center(child: Text(emoji, style: const TextStyle(fontSize: 20))),

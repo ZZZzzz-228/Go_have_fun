@@ -1,26 +1,26 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:uuid/uuid.dart';
-import '../../../../core/constants/app_constants.dart';
 import '../../../../core/router/route_names.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/utils/time_utils.dart';
+import '../../../../shared/providers/chat_visibility_provider.dart';
+import '../../../../shared/widgets/liquid_glass.dart';
 import '../providers/map_provider.dart';
 import '../widgets/beacon_status_sheet.dart';
 import '../widgets/map_user_marker.dart';
 import '../widgets/search_timer_widget.dart';
 
-/// Цвета "шапки" карты — светлая тема как в референсе (карта светлая,
-/// а элементы управления — тёмные "стеклянные" пилюли поверх неё)
+/// Цвета "шапки" карты — тёмная тема, стеклянные пилюли поверх тёмной карты.
 class _MapUI {
   _MapUI._();
-  static const Color ink = Color(0xFF14141B); // почти чёрный — текст/кнопки
-  static const Color chipDark = Color(0xFF1C1C24); // тёмная пилюля-кнопка
-  static const Color chipDarkBorder = Color(0x1FFFFFFF);
-  static const Color subtleText = Color(0xFF5B5B66);
+  static const Color chipDark = Color(0xFF190B30); // тёмная пилюля-кнопка
+  static const Color chipDarkBorder = Color(0x33C9A8FF);
+  static const Color subtleText = AppColors.textSecondary;
 }
 
 class MapScreen extends ConsumerStatefulWidget {
@@ -60,10 +60,10 @@ class _MapScreenState extends ConsumerState<MapScreen>
     final mapState = ref.watch(mapProvider);
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.background,
       body: Stack(
         children: [
-          // ===== КАРТА (светлая, как в референсе) =====
+          // ===== КАРТА (тёмная, в стиле приложения) =====
           _buildMap(mapState),
 
           // ===== Шапка: улица + погода =====
@@ -85,10 +85,6 @@ class _MapScreenState extends ConsumerState<MapScreen>
               ),
             ),
 
-          // ===== Подсказка если не время =====
-          if (!TimeUtils.isActiveSearchTime() && !mapState.isSearchActive)
-            _buildNotActiveTimeOverlay(),
-
           // ===== Маяк-статус =====
           if (mapState.currentBeaconText != null)
             Positioned(
@@ -102,7 +98,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
               ),
             ),
 
-          // ===== Главная кнопка «Начать поиск» =====
+          // ===== Главная кнопка «Гулять» — доступна в любое время =====
           Positioned(
             bottom: 202,
             left: 16,
@@ -134,14 +130,20 @@ class _MapScreenState extends ConsumerState<MapScreen>
         initialZoom: 16.5,
         minZoom: 12,
         maxZoom: 19,
-        backgroundColor: const Color(0xFFEDEDF2),
+        backgroundColor: AppColors.background,
         onTap: (_, __) {},
       ),
       children: [
-        // Светлые тайлы — как на референс-скриншоте
+        // Тёмные тайлы — в тон общей чёрно-фиолетовой палитре приложения
         TileLayer(
           urlTemplate:
-              'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+          'https://{s}.basemaps.cartocdn.com/dark_matter_nolabels/{z}/{x}/{y}{r}.png',
+          subdomains: const ['a', 'b', 'c', 'd'],
+          userAgentPackageName: 'com.gohavefun.app',
+        ),
+        TileLayer(
+          urlTemplate:
+          'https://{s}.basemaps.cartocdn.com/dark_matter_only_labels/{z}/{x}/{y}{r}.png',
           subdomains: const ['a', 'b', 'c', 'd'],
           userAgentPackageName: 'com.gohavefun.app',
         ),
@@ -152,8 +154,8 @@ class _MapScreenState extends ConsumerState<MapScreen>
             return CircleMarker(
               point: u.latLng,
               radius: 40,
-              color: AppColors.mapHeatMid.withOpacity(0.18),
-              borderColor: AppColors.primary.withOpacity(0.25),
+              color: AppColors.mapHeatMid.withValues(alpha: 0.18),
+              borderColor: AppColors.primary.withValues(alpha: 0.25),
               borderStrokeWidth: 1,
               useRadiusInMeter: false,
             );
@@ -169,16 +171,16 @@ class _MapScreenState extends ConsumerState<MapScreen>
               height: 34,
               child: Container(
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: _MapUI.chipDark,
                   shape: BoxShape.circle,
                   border: Border.all(color: AppColors.safeZone, width: 2),
                   boxShadow: const [
-                    BoxShadow(color: Colors.black26, blurRadius: 6),
+                    BoxShadow(color: Colors.black45, blurRadius: 6),
                   ],
                 ),
                 child: Center(
                   child:
-                      Text(zone.emoji, style: const TextStyle(fontSize: 15)),
+                  Text(zone.emoji, style: const TextStyle(fontSize: 15)),
                 ),
               ),
             );
@@ -199,7 +201,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
 
             // Другие пользователи (размытые координаты)
             ...mapState.nearbyUsers.map(
-              (user) => Marker(
+                  (user) => Marker(
                 point: user.latLng,
                 width: 90,
                 height: 90,
@@ -227,12 +229,15 @@ class _MapScreenState extends ConsumerState<MapScreen>
       left: 0,
       right: 0,
       child: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [Colors.white, Color(0x00FFFFFF)],
-            stops: [0.55, 1.0],
+            colors: [
+              AppColors.background.withValues(alpha: 0.95),
+              AppColors.background.withValues(alpha: 0.0),
+            ],
+            stops: const [0.55, 1.0],
           ),
         ),
         child: SafeArea(
@@ -242,19 +247,21 @@ class _MapScreenState extends ConsumerState<MapScreen>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Название улицы — крупно, жирно, с подчёркиванием, как в референсе
-                Text(
-                  street ?? (mapState.isLocatingStreet
-                      ? 'определяем улицу…'
-                      : 'локация недоступна'),
-                  style: const TextStyle(
-                    color: _MapUI.ink,
-                    fontSize: 28,
-                    fontWeight: FontWeight.w800,
-                    height: 1.12,
-                    decoration: TextDecoration.underline,
-                    decorationColor: _MapUI.ink,
-                    decorationThickness: 2,
+                // Название улицы — крупно, жирно, с градиентной подсветкой
+                ShaderMask(
+                  shaderCallback: (bounds) =>
+                      AppColors.primaryGradient.createShader(bounds),
+                  child: Text(
+                    street ??
+                        (mapState.isLocatingStreet
+                            ? 'определяем улицу…'
+                            : 'локация недоступна'),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 28,
+                      fontWeight: FontWeight.w800,
+                      height: 1.12,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -299,7 +306,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
             const SizedBox(height: 12),
             _CircleIconButton(
               icon: Icons.warning_amber_rounded,
-              iconColor: const Color(0xFFFF5A5F),
+              iconColor: const Color(0xFFFF6584),
               onTap: _onPanic,
               tooltip: 'Кнопка паники',
             ),
@@ -320,14 +327,22 @@ class _MapScreenState extends ConsumerState<MapScreen>
           width: 52,
           height: 52,
           decoration: BoxDecoration(
-            color: const Color(0xFFDFF7C4),
+            gradient: AppColors.primaryGradient,
             shape: BoxShape.circle,
-            boxShadow: const [
-              BoxShadow(color: Colors.black26, blurRadius: 14, offset: Offset(0, 4)),
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.18),
+              width: 1,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.secondary.withValues(alpha: 0.45),
+                blurRadius: 14,
+                offset: const Offset(0, 4),
+              ),
             ],
           ),
           child: const Icon(Icons.my_location_rounded,
-              color: Color(0xFF2E7D32), size: 24),
+              color: Colors.white, size: 24),
         ),
       ),
     );
@@ -338,6 +353,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
       return const SizedBox.shrink();
     }
 
+    // «Гулять» доступно в любое время суток — без временных ограничений.
     return GestureDetector(
       onTap: () => _startSearch(mapState),
       child: Container(
@@ -345,9 +361,13 @@ class _MapScreenState extends ConsumerState<MapScreen>
         decoration: BoxDecoration(
           gradient: AppColors.primaryGradient,
           borderRadius: BorderRadius.circular(18),
+          border: Border.all(
+            color: Colors.white.withValues(alpha: 0.18),
+            width: 1,
+          ),
           boxShadow: [
             BoxShadow(
-              color: AppColors.primary.withOpacity(0.45),
+              color: AppColors.secondary.withValues(alpha: 0.45),
               blurRadius: 24,
               offset: const Offset(0, 8),
             ),
@@ -355,60 +375,13 @@ class _MapScreenState extends ConsumerState<MapScreen>
         ),
         child: const Center(
           child: Text(
-            '🔍 Начать поиск',
+            '🚶 Гулять',
             style: TextStyle(
               color: Colors.white,
               fontSize: 17,
               fontWeight: FontWeight.w700,
             ),
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildNotActiveTimeOverlay() {
-    final timeLeft = TimeUtils.timeUntilActiveSearch();
-    return Positioned(
-      bottom: 264,
-      left: 16,
-      right: 16,
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: _MapUI.chipDark,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: const [
-            BoxShadow(color: Colors.black26, blurRadius: 14, offset: Offset(0, 4)),
-          ],
-        ),
-        child: Row(
-          children: [
-            const Text('🌙', style: TextStyle(fontSize: 24)),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Поиск включается в 19:00',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 14,
-                    ),
-                  ),
-                  Text(
-                    'Осталось ${TimeUtils.formatDuration(timeLeft)}',
-                    style: const TextStyle(
-                      color: Color(0xFFAFAFC0),
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
         ),
       ),
     );
@@ -422,33 +395,34 @@ class _MapScreenState extends ConsumerState<MapScreen>
   }
 
   void _startSearch(MapState mapState) {
-    if (!TimeUtils.isActiveSearchTime()) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Поиск работает с 19:00 до 00:00'),
-          backgroundColor: AppColors.warning,
-        ),
-      );
-      return;
-    }
+    // Ограничение по времени (19:00–00:00) убрано по требованию —
+    // поиск теперь можно запустить в любой момент.
     ref.read(mapProvider.notifier).startSearchSession();
   }
 
   void _onUserTapped(String userId, String userName) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppColors.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (_) => _UserContactSheet(
-        userId: userId,
-        userName: userName,
-        onConnect: () {
-          Navigator.pop(context);
-          final chatId = const Uuid().v4();
-          context.go('${RouteNames.chat}/$chatId');
-        },
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (_) => Padding(
+        padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+        child: LiquidGlassCard(
+          borderRadius: 28,
+          padding: EdgeInsets.zero,
+          showGlow: true,
+          child: _UserContactSheet(
+            userId: userId,
+            userName: userName,
+            onConnect: () {
+              // Двое "увиделись" — теперь появляется вкладка "Чаты".
+              ref.read(chatVisibilityProvider.notifier).state = true;
+              Navigator.pop(context);
+              final chatId = const Uuid().v4();
+              context.go('${RouteNames.chat}/$chatId');
+            },
+          ),
+        ),
       ),
     );
   }
@@ -456,15 +430,20 @@ class _MapScreenState extends ConsumerState<MapScreen>
   void _showBeaconSheet() {
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppColors.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (_) => BeaconStatusSheet(
-        onSelected: (emoji, text) {
-          ref.read(mapProvider.notifier).setBeacon(emoji, text);
-          Navigator.pop(context);
-        },
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (_) => Padding(
+        padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+        child: LiquidGlassCard(
+          borderRadius: 28,
+          padding: EdgeInsets.zero,
+          child: BeaconStatusSheet(
+            onSelected: (emoji, text) {
+              ref.read(mapProvider.notifier).setBeacon(emoji, text);
+              Navigator.pop(context);
+            },
+          ),
+        ),
       ),
     );
   }
@@ -532,18 +511,24 @@ class _CircleIconButton extends StatelessWidget {
       message: tooltip,
       child: GestureDetector(
         onTap: onTap,
-        child: Container(
-          width: 48,
-          height: 48,
-          decoration: BoxDecoration(
-            color: _MapUI.chipDark,
-            shape: BoxShape.circle,
-            border: Border.all(color: _MapUI.chipDarkBorder),
-            boxShadow: const [
-              BoxShadow(color: Colors.black38, blurRadius: 12, offset: Offset(0, 4)),
-            ],
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(24),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+            child: Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: _MapUI.chipDark.withValues(alpha: 0.75),
+                shape: BoxShape.circle,
+                border: Border.all(color: _MapUI.chipDarkBorder),
+                boxShadow: const [
+                  BoxShadow(color: Colors.black45, blurRadius: 12, offset: Offset(0, 4)),
+                ],
+              ),
+              child: Icon(icon, color: iconColor ?? Colors.white, size: 22),
+            ),
           ),
-          child: Icon(icon, color: iconColor ?? Colors.white, size: 22),
         ),
       ),
     );
@@ -571,7 +556,8 @@ class _MyLocationMarker extends StatelessWidget {
                 height: 52,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: AppColors.primary.withOpacity(0.18 * (1 - pulseController.value)),
+                  color: AppColors.primary
+                      .withValues(alpha: 0.18 * (1 - pulseController.value)),
                 ),
               ),
             ),
@@ -584,7 +570,7 @@ class _MyLocationMarker extends StatelessWidget {
                 border: Border.all(color: Colors.white, width: 3),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.primary.withOpacity(0.5),
+                    color: AppColors.secondary.withValues(alpha: 0.5),
                     blurRadius: 12,
                   ),
                 ],
@@ -612,32 +598,38 @@ class _BeaconBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        decoration: BoxDecoration(
-          color: _MapUI.chipDark,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: AppColors.primary.withOpacity(0.35)),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(emoji, style: const TextStyle(fontSize: 18)),
-            const SizedBox(width: 8),
-            Flexible(
-              child: Text(
-                text,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
-                ),
-                overflow: TextOverflow.ellipsis,
-              ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            decoration: BoxDecoration(
+              color: _MapUI.chipDark.withValues(alpha: 0.75),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: AppColors.primary.withValues(alpha: 0.35)),
             ),
-            const SizedBox(width: 6),
-            const Icon(Icons.edit_outlined, size: 14, color: Color(0xFFAFAFC0)),
-          ],
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(emoji, style: const TextStyle(fontSize: 18)),
+                const SizedBox(width: 8),
+                Flexible(
+                  child: Text(
+                    text,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                const SizedBox(width: 6),
+                const Icon(Icons.edit_outlined, size: 14, color: AppColors.textSecondary),
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -666,7 +658,7 @@ class _UserContactSheet extends StatelessWidget {
             width: 48,
             height: 4,
             decoration: BoxDecoration(
-              color: AppColors.surfaceVariant,
+              color: Colors.white.withValues(alpha: 0.24),
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -678,6 +670,13 @@ class _UserContactSheet extends StatelessWidget {
             decoration: BoxDecoration(
               gradient: AppColors.primaryGradient,
               shape: BoxShape.circle,
+              border: Border.all(color: Colors.white.withValues(alpha: 0.18), width: 1),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.secondary.withValues(alpha: 0.4),
+                  blurRadius: 20,
+                ),
+              ],
             ),
             child: const Center(
               child: Text('👤', style: TextStyle(fontSize: 36)),
@@ -701,8 +700,9 @@ class _UserContactSheet extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: AppColors.surfaceVariant,
+              color: Colors.white.withValues(alpha: 0.06),
               borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
             ),
             child: const Row(
               children: [
@@ -722,32 +722,9 @@ class _UserContactSheet extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 20),
-          GestureDetector(
+          LiquidGlassButton(
+            label: '💬 Начать чат с $userName',
             onTap: onConnect,
-            child: Container(
-              height: 54,
-              decoration: BoxDecoration(
-                gradient: AppColors.primaryGradient,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.primary.withOpacity(0.35),
-                    blurRadius: 16,
-                    offset: const Offset(0, 6),
-                  ),
-                ],
-              ),
-              child: Center(
-                child: Text(
-                  '💬 Начать чат с $userName',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-            ),
           ),
           const SizedBox(height: 16),
           TextButton(

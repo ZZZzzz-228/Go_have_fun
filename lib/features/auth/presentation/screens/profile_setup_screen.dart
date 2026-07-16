@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../../core/router/route_names.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../widgets/gradient_button.dart';
+import '../../../../shared/widgets/liquid_glass.dart';
 
 class ProfileSetupScreen extends StatefulWidget {
   const ProfileSetupScreen({super.key});
@@ -46,47 +46,51 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Прогресс
-              Row(
-                children: List.generate(2, (i) => Expanded(
-                  child: Container(
-                    height: 4,
-                    margin: EdgeInsets.only(right: i == 0 ? 8 : 0),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(2),
-                      gradient: i <= _step
-                          ? AppColors.primaryGradient
-                          : const LinearGradient(
-                              colors: [AppColors.surfaceVariant, AppColors.surfaceVariant]),
+      body: AppGradientBackground(
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Прогресс
+                Row(
+                  children: List.generate(2, (i) => Expanded(
+                    child: Container(
+                      height: 4,
+                      margin: EdgeInsets.only(right: i == 0 ? 8 : 0),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(2),
+                        gradient: i <= _step
+                            ? AppColors.primaryGradient
+                            : LinearGradient(colors: [
+                          Colors.white.withValues(alpha: 0.12),
+                          Colors.white.withValues(alpha: 0.12),
+                        ]),
+                      ),
                     ),
-                  ),
-                )),
-              ),
-              const SizedBox(height: 32),
+                  )),
+                ),
+                const SizedBox(height: 32),
 
-              if (_step == 0) _buildPhotoStep(),
-              if (_step == 1) _buildBioStep(),
+                if (_step == 0) _buildPhotoStep(),
+                if (_step == 1) _buildBioStep(),
 
-              const Spacer(),
+                const Spacer(),
 
-              GradientButton(
-                label: _step == 0 ? 'Дальше' : 'Начать знакомства!',
-                isLoading: _isLoading,
-                onTap: () {
-                  if (_step == 0) {
-                    setState(() => _step = 1);
-                  } else {
-                    _finish();
-                  }
-                },
-              ),
-            ],
+                LiquidGlassButton(
+                  label: _step == 0 ? 'Дальше' : 'Начать знакомства!',
+                  isLoading: _isLoading,
+                  onTap: () {
+                    if (_step == 0) {
+                      setState(() => _step = 1);
+                    } else {
+                      _finish();
+                    }
+                  },
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -128,22 +132,24 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                   child: Container(
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(16),
-                      color: AppColors.surfaceVariant,
+                      color: Colors.white.withValues(alpha: 0.05),
+                      border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.12)),
                       image: photo != null
                           ? DecorationImage(
-                              image: FileImage(photo),
-                              fit: BoxFit.cover,
-                            )
+                        image: FileImage(photo),
+                        fit: BoxFit.cover,
+                      )
                           : null,
                     ),
                     child: photo == null
                         ? const Center(
-                            child: Icon(
-                              Icons.add_rounded,
-                              color: AppColors.textSecondary,
-                              size: 32,
-                            ),
-                          )
+                      child: Icon(
+                        Icons.add_rounded,
+                        color: AppColors.textSecondary,
+                        size: 32,
+                      ),
+                    )
                         : null,
                   ),
                 );
@@ -174,28 +180,11 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
             style: TextStyle(color: AppColors.textSecondary, fontSize: 15),
           ),
           const SizedBox(height: 24),
-          TextField(
+          LiquidGlassTextField(
             controller: _bioCtrl,
             maxLength: 300,
             maxLines: 6,
-            style: const TextStyle(color: AppColors.textPrimary, fontSize: 16),
-            decoration: InputDecoration(
-              hintText: 'Люблю кофе, велосипед и случайные встречи...',
-              hintStyle: const TextStyle(color: AppColors.textSecondary),
-              filled: true,
-              fillColor: AppColors.surfaceVariant,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(16),
-                borderSide: BorderSide.none,
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(16),
-                borderSide:
-                    const BorderSide(color: AppColors.primary, width: 2),
-              ),
-              counterStyle:
-                  const TextStyle(color: AppColors.textSecondary),
-            ),
+            hint: 'Люблю кофе, велосипед и случайные встречи...',
           ),
         ],
       ),

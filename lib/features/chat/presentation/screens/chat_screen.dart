@@ -279,7 +279,7 @@ class _BurnBackground extends StatelessWidget {
             begin: Alignment.bottomCenter,
             end: Alignment.topCenter,
             colors: [
-              AppColors.timerRed.withOpacity(opacity),
+              AppColors.timerRed.withValues(alpha: opacity),
               Colors.transparent,
             ],
           ),

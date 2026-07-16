@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/time_utils.dart';
+import '../../../../shared/widgets/liquid_glass.dart';
 
 class SearchTimerWidget extends StatelessWidget {
   final int remainingSeconds;
@@ -21,22 +22,10 @@ class SearchTimerWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final timeStr = TimeUtils.formatSeconds(remainingSeconds);
 
-    return Container(
+    return LiquidGlassCard(
+      borderRadius: 16,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      decoration: BoxDecoration(
-        color: AppColors.surface.withOpacity(0.95),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: AppColors.primary.withOpacity(0.3),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primary.withOpacity(0.15),
-            blurRadius: 16,
-            spreadRadius: 2,
-          ),
-        ],
-      ),
+      showGlow: true,
       child: Row(
         children: [
           // Анимированный индикатор
@@ -48,7 +37,7 @@ class SearchTimerWidget extends StatelessWidget {
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.success.withOpacity(0.6),
+                  color: AppColors.success.withValues(alpha: 0.6),
                   blurRadius: 8,
                   spreadRadius: 2,
                 ),
@@ -78,7 +67,7 @@ class SearchTimerWidget extends StatelessWidget {
                   child: LinearProgressIndicator(
                     value: _progress,
                     minHeight: 3,
-                    backgroundColor: AppColors.surfaceVariant,
+                    backgroundColor: Colors.white.withValues(alpha: 0.12),
                     valueColor: const AlwaysStoppedAnimation<Color>(
                         AppColors.primary),
                   ),
@@ -106,7 +95,7 @@ class SearchTimerWidget extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
-                color: AppColors.surfaceVariant,
+                color: Colors.white.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: const Icon(

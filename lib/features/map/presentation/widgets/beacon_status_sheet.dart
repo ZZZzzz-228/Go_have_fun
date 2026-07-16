@@ -21,7 +21,7 @@ class BeaconStatusSheet extends StatelessWidget {
               width: 48,
               height: 4,
               decoration: BoxDecoration(
-                color: AppColors.surfaceVariant,
+                color: Colors.white.withValues(alpha: 0.24),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -52,10 +52,10 @@ class BeaconStatusSheet extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(
                       horizontal: 14, vertical: 10),
                   decoration: BoxDecoration(
-                    color: AppColors.surfaceVariant,
+                    color: Colors.white.withValues(alpha: 0.06),
                     borderRadius: BorderRadius.circular(14),
                     border: Border.all(
-                        color: AppColors.surfaceVariant, width: 1.5),
+                        color: Colors.white.withValues(alpha: 0.14), width: 1.2),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,

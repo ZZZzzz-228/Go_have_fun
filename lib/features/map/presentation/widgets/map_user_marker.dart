@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../domain/entities/location_entity.dart';
 
 /// Маркер друга на карте — чёрный "пузырь" с именем и хвостиком-указателем,
@@ -28,38 +29,46 @@ class MapUserMarker extends StatelessWidget {
             decoration: BoxDecoration(
               gradient: user.isFemale
                   ? const LinearGradient(
-                      colors: [Color(0xFFFF4E6A), Color(0xFFFF8E53)],
-                    )
+                colors: [AppColors.femaleGlowStart, AppColors.femaleGlowEnd],
+              )
                   : const LinearGradient(
-                      colors: [Color(0xFF7C4DFF), Color(0xFF448AFF)],
-                    ),
+                colors: [AppColors.maleGlowStart, AppColors.maleGlowEnd],
+              ),
               shape: BoxShape.circle,
               border: Border.all(color: Colors.white, width: 2),
-              boxShadow: const [
-                BoxShadow(color: Colors.black26, blurRadius: 6),
+              boxShadow: [
+                BoxShadow(
+                  color: (user.isFemale
+                      ? AppColors.femaleGlowEnd
+                      : AppColors.maleGlowEnd)
+                      .withValues(alpha: 0.55),
+                  blurRadius: 10,
+                  spreadRadius: 1,
+                ),
               ],
             ),
             child: user.avatarUrl != null
                 ? ClipOval(
-                    child: Image.network(user.avatarUrl!, fit: BoxFit.cover),
-                  )
+              child: Image.network(user.avatarUrl!, fit: BoxFit.cover),
+            )
                 : Center(
-                    child: Text(
-                      user.isFemale ? '👩' : '👨',
-                      style: const TextStyle(fontSize: 13),
-                    ),
-                  ),
+              child: Text(
+                user.isFemale ? '👩' : '👨',
+                style: const TextStyle(fontSize: 13),
+              ),
+            ),
           ),
           // Чёрный пузырь-бейдж с именем (как на референсе)
           Container(
             margin: const EdgeInsets.only(top: 2),
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: const Color(0xFF17171C),
+              color: const Color(0xFF190B30),
               borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
               boxShadow: const [
                 BoxShadow(
-                    color: Colors.black38, blurRadius: 8, offset: Offset(0, 2)),
+                    color: Colors.black54, blurRadius: 8, offset: Offset(0, 2)),
               ],
             ),
             child: Column(
@@ -78,7 +87,7 @@ class MapUserMarker extends StatelessWidget {
                       ? '${user.beaconEmoji}'
                       : '${user.distanceMeters.round()} м',
                   style: const TextStyle(
-                    color: Color(0xFFAFAFC0),
+                    color: AppColors.textSecondary,
                     fontSize: 10,
                     fontWeight: FontWeight.w500,
                   ),
@@ -93,7 +102,7 @@ class MapUserMarker extends StatelessWidget {
               width: 8,
               height: 8,
               margin: const EdgeInsets.only(top: -4),
-              decoration: const BoxDecoration(color: Color(0xFF17171C)),
+              decoration: const BoxDecoration(color: Color(0xFF190B30)),
             ),
           ),
         ],

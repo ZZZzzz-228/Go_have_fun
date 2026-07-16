@@ -30,10 +30,10 @@ class ProfilePhotoGrid extends StatelessWidget {
         }
         return Container(
           decoration: BoxDecoration(
-            color: AppColors.surfaceVariant,
+            color: Colors.white.withValues(alpha: 0.05),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: AppColors.surface,
+              color: Colors.white.withValues(alpha: 0.12),
               width: 1.5,
             ),
           ),

@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/router/route_names.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../widgets/auth_text_field.dart';
-import '../widgets/gradient_button.dart';
+import '../../../../shared/widgets/liquid_glass.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -44,6 +43,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         leading: IconButton(
@@ -51,184 +51,222 @@ class _RegisterScreenState extends State<RegisterScreen> {
           onPressed: () => context.go(RouteNames.login),
         ),
       ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Создать аккаунт',
-                  style: TextStyle(
-                    color: AppColors.textPrimary,
-                    fontSize: 28,
-                    fontWeight: FontWeight.w800,
+      body: AppGradientBackground(
+        child: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 8),
+                  ShaderMask(
+                    shaderCallback: (bounds) =>
+                        AppColors.primaryGradient.createShader(bounds),
+                    child: const Text(
+                      'Создать аккаунт',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 28,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
                   ),
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  'Тебя уже ждут там, за углом 😉',
-                  style: TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 15,
-                  ),
-                ),
-                const SizedBox(height: 32),
-
-                // Имя
-                AuthTextField(
-                  controller: _nameCtrl,
-                  label: 'Как тебя зовут?',
-                  hint: 'Иван',
-                  prefixIcon: Icons.person_outline,
-                  validator: (v) =>
-                      v == null || v.isEmpty ? 'Введи имя' : null,
-                ),
-                const SizedBox(height: 16),
-
-                // Email
-                AuthTextField(
-                  controller: _emailCtrl,
-                  label: 'Email',
-                  hint: 'your@email.com',
-                  keyboardType: TextInputType.emailAddress,
-                  prefixIcon: Icons.email_outlined,
-                  validator: (v) {
-                    if (v == null || v.isEmpty) return 'Введи email';
-                    if (!v.contains('@')) return 'Неверный формат';
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-
-                // Пароль
-                AuthTextField(
-                  controller: _passCtrl,
-                  label: 'Пароль',
-                  hint: '••••••••',
-                  obscureText: _obscurePass,
-                  prefixIcon: Icons.lock_outline,
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _obscurePass
-                          ? Icons.visibility_off_outlined
-                          : Icons.visibility_outlined,
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Тебя уже ждут там, за углом 😉',
+                    style: TextStyle(
                       color: AppColors.textSecondary,
+                      fontSize: 15,
                     ),
-                    onPressed: () =>
-                        setState(() => _obscurePass = !_obscurePass),
                   ),
-                  validator: (v) {
-                    if (v == null || v.isEmpty) return 'Введи пароль';
-                    if (v.length < 6) return 'Минимум 6 символов';
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 24),
+                  const SizedBox(height: 28),
 
-                // Возраст
-                const Text(
-                  'Возраст',
-                  style: TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    IconButton(
-                      onPressed: () {
-                        if (_age > 18) setState(() => _age--);
-                      },
-                      icon: const Icon(Icons.remove_circle_outline,
-                          color: AppColors.primary),
-                    ),
-                    Expanded(
-                      child: Center(
-                        child: Text(
-                          '$_age',
-                          style: const TextStyle(
-                            color: AppColors.textPrimary,
-                            fontSize: 22,
-                            fontWeight: FontWeight.w700,
+                  LiquidGlassCard(
+                    borderRadius: 24,
+                    padding: const EdgeInsets.all(18),
+                    child: Column(
+                      children: [
+                        LiquidGlassTextField(
+                          controller: _nameCtrl,
+                          label: 'Как тебя зовут?',
+                          hint: 'Иван',
+                          prefixIcon: Icons.person_outline,
+                          validator: (v) =>
+                          v == null || v.isEmpty ? 'Введи имя' : null,
+                        ),
+                        const SizedBox(height: 16),
+                        LiquidGlassTextField(
+                          controller: _emailCtrl,
+                          label: 'Email',
+                          hint: 'your@email.com',
+                          keyboardType: TextInputType.emailAddress,
+                          prefixIcon: Icons.email_outlined,
+                          validator: (v) {
+                            if (v == null || v.isEmpty) return 'Введи email';
+                            if (!v.contains('@')) return 'Неверный формат';
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 16),
+                        LiquidGlassTextField(
+                          controller: _passCtrl,
+                          label: 'Пароль',
+                          hint: '••••••••',
+                          obscureText: _obscurePass,
+                          prefixIcon: Icons.lock_outline,
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _obscurePass
+                                  ? Icons.visibility_off_outlined
+                                  : Icons.visibility_outlined,
+                              color: AppColors.textSecondary,
+                            ),
+                            onPressed: () =>
+                                setState(() => _obscurePass = !_obscurePass),
                           ),
+                          validator: (v) {
+                            if (v == null || v.isEmpty) return 'Введи пароль';
+                            if (v.length < 6) return 'Минимум 6 символов';
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 20),
+
+                        // Возраст
+                        const Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            'Возраст',
+                            style: TextStyle(
+                              color: AppColors.textSecondary,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            _StepperButton(
+                              icon: Icons.remove_rounded,
+                              onTap: () {
+                                if (_age > 18) setState(() => _age--);
+                              },
+                            ),
+                            Expanded(
+                              child: Center(
+                                child: Text(
+                                  '$_age',
+                                  style: const TextStyle(
+                                    color: AppColors.textPrimary,
+                                    fontSize: 22,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            _StepperButton(
+                              icon: Icons.add_rounded,
+                              onTap: () {
+                                if (_age < 60) setState(() => _age++);
+                              },
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Пол
+                        const Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            'Пол',
+                            style: TextStyle(
+                              color: AppColors.textSecondary,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            _GenderChip(
+                              label: '👩 Женщина',
+                              selected: _gender == 'female',
+                              onTap: () => setState(() => _gender = 'female'),
+                            ),
+                            const SizedBox(width: 12),
+                            _GenderChip(
+                              label: '👨 Мужчина',
+                              selected: _gender == 'male',
+                              onTap: () => setState(() => _gender = 'male'),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 28),
+
+                  LiquidGlassButton(
+                    label: 'Зарегистрироваться',
+                    isLoading: _isLoading,
+                    onTap: _register,
+                  ),
+                  const SizedBox(height: 24),
+
+                  Center(
+                    child: GestureDetector(
+                      onTap: () => context.go(RouteNames.login),
+                      child: const Text.rich(
+                        TextSpan(
+                          text: 'Уже есть аккаунт? ',
+                          style: TextStyle(color: AppColors.textSecondary),
+                          children: [
+                            TextSpan(
+                              text: 'Войти',
+                              style: TextStyle(
+                                color: AppColors.primary,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
-                    IconButton(
-                      onPressed: () {
-                        if (_age < 60) setState(() => _age++);
-                      },
-                      icon: const Icon(Icons.add_circle_outline,
-                          color: AppColors.primary),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-
-                // Пол
-                const Text(
-                  'Пол',
-                  style: TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
                   ),
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    _GenderChip(
-                      label: '👩 Женщина',
-                      selected: _gender == 'female',
-                      onTap: () => setState(() => _gender = 'female'),
-                    ),
-                    const SizedBox(width: 12),
-                    _GenderChip(
-                      label: '👨 Мужчина',
-                      selected: _gender == 'male',
-                      onTap: () => setState(() => _gender = 'male'),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 32),
-
-                GradientButton(
-                  label: 'Зарегистрироваться',
-                  isLoading: _isLoading,
-                  onTap: _register,
-                ),
-                const SizedBox(height: 24),
-
-                Center(
-                  child: GestureDetector(
-                    onTap: () => context.go(RouteNames.login),
-                    child: const Text.rich(
-                      TextSpan(
-                        text: 'Уже есть аккаунт? ',
-                        style: TextStyle(color: AppColors.textSecondary),
-                        children: [
-                          TextSpan(
-                            text: 'Войти',
-                            style: TextStyle(
-                              color: AppColors.primary,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 32),
-              ],
+                  const SizedBox(height: 32),
+                ],
+              ),
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _StepperButton extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback onTap;
+
+  const _StepperButton({required this.icon, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.08),
+          shape: BoxShape.circle,
+          border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
+        ),
+        child: Icon(icon, color: AppColors.textPrimary, size: 18),
       ),
     );
   }
@@ -255,19 +293,29 @@ class _GenderChip extends StatelessWidget {
           height: 52,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(14),
-            color: selected
-                ? AppColors.primary.withOpacity(0.15)
-                : AppColors.surfaceVariant,
+            gradient: selected ? AppColors.primaryGradient : null,
+            color: selected ? null : Colors.white.withValues(alpha: 0.06),
             border: Border.all(
-              color: selected ? AppColors.primary : Colors.transparent,
-              width: 1.5,
+              color: selected
+                  ? Colors.white.withValues(alpha: 0.18)
+                  : Colors.white.withValues(alpha: 0.12),
+              width: 1.2,
             ),
+            boxShadow: selected
+                ? [
+              BoxShadow(
+                color: AppColors.secondary.withValues(alpha: 0.35),
+                blurRadius: 14,
+                offset: const Offset(0, 4),
+              ),
+            ]
+                : null,
           ),
           child: Center(
             child: Text(
               label,
               style: TextStyle(
-                color: selected ? AppColors.primary : AppColors.textSecondary,
+                color: selected ? Colors.white : AppColors.textSecondary,
                 fontWeight: FontWeight.w600,
                 fontSize: 14,
               ),

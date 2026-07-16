@@ -22,7 +22,7 @@ class ChatMessageBubble extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 8),
       child: Row(
         mainAxisAlignment:
-            isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+        isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           if (!isMe)
@@ -81,7 +81,7 @@ class ChatMessageBubble extends StatelessWidget {
                     timeStr,
                     style: TextStyle(
                       color: isMe
-                          ? Colors.white.withOpacity(0.6)
+                          ? Colors.white.withValues(alpha: 0.6)
                           : AppColors.textSecondary,
                       fontSize: 11,
                     ),
