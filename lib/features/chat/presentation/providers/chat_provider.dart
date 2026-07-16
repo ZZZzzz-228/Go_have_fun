@@ -72,16 +72,16 @@ class ChatState {
 
 // ===== Провайдер =====
 final chatProvider =
-    StateNotifierProviderFamily<ChatNotifier, ChatState, String>(
-  (ref, chatId) => ChatNotifier(chatId),
+StateNotifierProviderFamily<ChatNotifier, ChatState, String>(
+      (ref, chatId) => ChatNotifier(chatId),
 );
 
 class ChatNotifier extends StateNotifier<ChatState> {
   ChatNotifier(String chatId)
       : super(ChatState(
-          chatId: chatId,
-          secondsRemaining: AppConstants.chatDurationSeconds,
-        ));
+    chatId: chatId,
+    secondsRemaining: AppConstants.chatDurationSeconds,
+  ));
 
   Timer? _timer;
 
@@ -157,11 +157,10 @@ class ChatNotifier extends StateNotifier<ChatState> {
       final agrees = Random().nextBool();
       if (agrees) {
         state = state.copyWith(
-          partnerWantsExtend: true,
           secondsRemaining:
-              state.secondsRemaining + AppConstants.chatExtensionSeconds,
+          state.secondsRemaining + AppConstants.chatExtensionSeconds,
           totalSeconds:
-              state.totalSeconds + AppConstants.chatExtensionSeconds,
+          state.totalSeconds + AppConstants.chatExtensionSeconds,
           myWantsExtend: false,
           partnerWantsExtend: false,
         );
