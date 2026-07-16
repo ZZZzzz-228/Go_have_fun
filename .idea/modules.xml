@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/Go_have_fun.iml" filepath="$PROJECT_DIR$/Go_have_fun.iml" />
+      <module fileurl="file://$PROJECT_DIR$/android/go_have_fun_android.iml" filepath="$PROJECT_DIR$/android/go_have_fun_android.iml" />
     </modules>
   </component>
 </project>

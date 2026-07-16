@@ -7,6 +7,9 @@ class RouteNames {
   static const String register = '/register';
   static const String profileSetup = '/profile-setup';
   static const String map = '/map';
+  static const String friends = '/friends';
+  static const String chatsList = '/chats';
+  static const String checkins = '/checkins';
   static const String chat = '/chat';
   static const String chatExpired = '/chat-expired';
   static const String profile = '/profile';

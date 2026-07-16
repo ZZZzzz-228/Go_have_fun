@@ -12,7 +12,16 @@ import '../providers/map_provider.dart';
 import '../widgets/beacon_status_sheet.dart';
 import '../widgets/map_user_marker.dart';
 import '../widgets/search_timer_widget.dart';
-import '../widgets/safe_zone_info_widget.dart';
+
+/// Цвета "шапки" карты — светлая тема как в референсе (карта светлая,
+/// а элементы управления — тёмные "стеклянные" пилюли поверх неё)
+class _MapUI {
+  _MapUI._();
+  static const Color ink = Color(0xFF14141B); // почти чёрный — текст/кнопки
+  static const Color chipDark = Color(0xFF1C1C24); // тёмная пилюля-кнопка
+  static const Color chipDarkBorder = Color(0x1FFFFFFF);
+  static const Color subtleText = Color(0xFF5B5B66);
+}
 
 class MapScreen extends ConsumerStatefulWidget {
   const MapScreen({super.key});
@@ -34,7 +43,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
       duration: const Duration(seconds: 2),
     )..repeat();
 
-    // Инициализировать локацию
+    // Инициализировать локацию (гео + улица + погода — всё автоматически)
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(mapProvider.notifier).initLocation();
     });
@@ -51,19 +60,22 @@ class _MapScreenState extends ConsumerState<MapScreen>
     final mapState = ref.watch(mapProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Colors.white,
       body: Stack(
         children: [
-          // ===== КАРТА =====
+          // ===== КАРТА (светлая, как в референсе) =====
           _buildMap(mapState),
 
-          // ===== Топ-бар =====
+          // ===== Шапка: улица + погода =====
           _buildTopBar(mapState),
+
+          // ===== Круглые кнопки справа =====
+          _buildRightButtons(mapState),
 
           // ===== Таймер поиска =====
           if (mapState.isSearchActive)
             Positioned(
-              top: 100,
+              top: 190,
               left: 16,
               right: 16,
               child: SearchTimerWidget(
@@ -77,52 +89,40 @@ class _MapScreenState extends ConsumerState<MapScreen>
           if (!TimeUtils.isActiveSearchTime() && !mapState.isSearchActive)
             _buildNotActiveTimeOverlay(),
 
-          // ===== Кнопки снизу =====
-          Positioned(
-            bottom: 24,
-            left: 16,
-            right: 16,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                // Кнопка паники
-                _PanicButton(
-                  onTap: () => _onPanic(),
-                ),
-                const SizedBox(height: 12),
-
-                // Кнопка "Найти меня"
-                FloatingActionButton.small(
-                  heroTag: 'locate',
-                  backgroundColor: AppColors.surface,
-                  onPressed: _centerOnMe,
-                  child: const Icon(Icons.my_location,
-                      color: AppColors.primary),
-                ),
-                const SizedBox(height: 12),
-
-                // Главная кнопка — Начать поиск
-                _buildMainButton(mapState),
-              ],
-            ),
-          ),
-
           // ===== Маяк-статус =====
           if (mapState.currentBeaconText != null)
             Positioned(
-              bottom: 160,
+              bottom: 264,
               left: 16,
-              right: 80,
+              right: 16,
               child: _BeaconBadge(
                 emoji: mapState.currentBeaconEmoji ?? '🚶',
                 text: mapState.currentBeaconText!,
                 onTap: _showBeaconSheet,
               ),
             ),
+
+          // ===== Главная кнопка «Начать поиск» =====
+          Positioned(
+            bottom: 202,
+            left: 16,
+            right: 16,
+            child: _buildMainButton(mapState),
+          ),
+
+          // ===== Геолокация (над плавающим нижним меню) =====
+          Positioned(
+            bottom: 100,
+            left: 16,
+            right: 16,
+            child: _buildBottomRow(mapState),
+          ),
         ],
       ),
     );
   }
+
+  // ===================== КАРТА =====================
 
   Widget _buildMap(MapState mapState) {
     final center = mapState.myLocation ?? const LatLng(55.7558, 37.6173);
@@ -134,14 +134,14 @@ class _MapScreenState extends ConsumerState<MapScreen>
         initialZoom: 16.5,
         minZoom: 12,
         maxZoom: 19,
-        backgroundColor: const Color(0xFF1A1A2E),
+        backgroundColor: const Color(0xFFEDEDF2),
         onTap: (_, __) {},
       ),
       children: [
-        // Тайлы карты (тёмная тема)
+        // Светлые тайлы — как на референс-скриншоте
         TileLayer(
           urlTemplate:
-              'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+              'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
           subdomains: const ['a', 'b', 'c', 'd'],
           userAgentPackageName: 'com.gohavefun.app',
         ),
@@ -152,10 +152,35 @@ class _MapScreenState extends ConsumerState<MapScreen>
             return CircleMarker(
               point: u.latLng,
               radius: 40,
-              color: AppColors.mapHeatMid,
-              borderColor: AppColors.primary.withOpacity(0.3),
+              color: AppColors.mapHeatMid.withOpacity(0.18),
+              borderColor: AppColors.primary.withOpacity(0.25),
               borderStrokeWidth: 1,
               useRadiusInMeter: false,
+            );
+          }).toList(),
+        ),
+
+        // Безопасные зоны (заведения-партнёры)
+        MarkerLayer(
+          markers: mapState.safeZones.map((zone) {
+            return Marker(
+              point: LatLng(zone.latitude, zone.longitude),
+              width: 34,
+              height: 34,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: AppColors.safeZone, width: 2),
+                  boxShadow: const [
+                    BoxShadow(color: Colors.black26, blurRadius: 6),
+                  ],
+                ),
+                child: Center(
+                  child:
+                      Text(zone.emoji, style: const TextStyle(fontSize: 15)),
+                ),
+              ),
             );
           }).toList(),
         ),
@@ -176,8 +201,9 @@ class _MapScreenState extends ConsumerState<MapScreen>
             ...mapState.nearbyUsers.map(
               (user) => Marker(
                 point: user.latLng,
-                width: 56,
-                height: 56,
+                width: 90,
+                height: 90,
+                alignment: Alignment.bottomCenter,
                 child: MapUserMarker(
                   user: user,
                   onTap: () => _onUserTapped(user.userId, user.name),
@@ -186,119 +212,122 @@ class _MapScreenState extends ConsumerState<MapScreen>
             ),
           ],
         ),
-
-        // Безопасные зоны (заведения-партнёры)
-        MarkerLayer(
-          markers: mapState.safeZones.map((zone) {
-            return Marker(
-              point: LatLng(zone.latitude, zone.longitude),
-              width: 36,
-              height: 36,
-              child: Container(
-                decoration: BoxDecoration(
-                  color: AppColors.safeZone,
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.safeZone.withOpacity(0.4),
-                      blurRadius: 8,
-                    ),
-                  ],
-                ),
-                child: const Center(
-                  child: Text('☕', style: TextStyle(fontSize: 16)),
-                ),
-              ),
-            );
-          }).toList(),
-        ),
       ],
     );
   }
 
+  // ===================== ШАПКА =====================
+
   Widget _buildTopBar(MapState mapState) {
+    final street = mapState.streetName;
+    final temp = mapState.temperatureC;
+
     return Positioned(
       top: 0,
       left: 0,
       right: 0,
       child: Container(
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              AppColors.background,
-              AppColors.background.withOpacity(0),
-            ],
+            colors: [Colors.white, Color(0x00FFFFFF)],
+            stops: [0.55, 1.0],
           ),
         ),
         child: SafeArea(
+          bottom: false,
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Row(
+            padding: const EdgeInsets.fromLTRB(20, 12, 96, 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Онлайн-статус
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: AppColors.surface,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        width: 8,
-                        height: 8,
-                        decoration: const BoxDecoration(
-                          color: AppColors.success,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        '${mapState.nearbyUsers.length} рядом',
-                        style: const TextStyle(
-                          color: AppColors.textPrimary,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
+                // Название улицы — крупно, жирно, с подчёркиванием, как в референсе
+                Text(
+                  street ?? (mapState.isLocatingStreet
+                      ? 'определяем улицу…'
+                      : 'локация недоступна'),
+                  style: const TextStyle(
+                    color: _MapUI.ink,
+                    fontSize: 28,
+                    fontWeight: FontWeight.w800,
+                    height: 1.12,
+                    decoration: TextDecoration.underline,
+                    decorationColor: _MapUI.ink,
+                    decorationThickness: 2,
                   ),
                 ),
-                const Spacer(),
-                // Статус-маяк кнопка
-                GestureDetector(
-                  onTap: _showBeaconSheet,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: AppColors.surface,
-                      borderRadius: BorderRadius.circular(20),
+                const SizedBox(height: 8),
+                // Погода — определяется автоматически по геопозиции
+                Row(
+                  children: [
+                    Text(
+                      temp != null
+                          ? '${mapState.weatherEmoji} ${temp.round()}°C'
+                          : '${mapState.weatherEmoji} …',
+                      style: const TextStyle(
+                        color: _MapUI.subtleText,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
-                    child: const Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text('📡', style: TextStyle(fontSize: 14)),
-                        SizedBox(width: 4),
-                        Text(
-                          'Статус',
-                          style: TextStyle(
-                            color: AppColors.textPrimary,
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+                  ],
                 ),
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  // ===================== ПРАВЫЕ КРУГЛЫЕ КНОПКИ =====================
+
+  Widget _buildRightButtons(MapState mapState) {
+    return Positioned(
+      top: 56,
+      right: 16,
+      child: SafeArea(
+        bottom: false,
+        child: Column(
+          children: [
+            _CircleIconButton(
+              icon: Icons.wifi_tethering_rounded,
+              onTap: _showBeaconSheet,
+              tooltip: 'Мой статус',
+            ),
+            const SizedBox(height: 12),
+            _CircleIconButton(
+              icon: Icons.warning_amber_rounded,
+              iconColor: const Color(0xFFFF5A5F),
+              onTap: _onPanic,
+              tooltip: 'Кнопка паники',
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ===================== НИЖНИЙ РЯД =====================
+
+  Widget _buildBottomRow(MapState mapState) {
+    return Align(
+      alignment: Alignment.centerRight,
+      child: GestureDetector(
+        onTap: _centerOnMe,
+        child: Container(
+          width: 52,
+          height: 52,
+          decoration: BoxDecoration(
+            color: const Color(0xFFDFF7C4),
+            shape: BoxShape.circle,
+            boxShadow: const [
+              BoxShadow(color: Colors.black26, blurRadius: 14, offset: Offset(0, 4)),
+            ],
+          ),
+          child: const Icon(Icons.my_location_rounded,
+              color: Color(0xFF2E7D32), size: 24),
         ),
       ),
     );
@@ -341,17 +370,17 @@ class _MapScreenState extends ConsumerState<MapScreen>
   Widget _buildNotActiveTimeOverlay() {
     final timeLeft = TimeUtils.timeUntilActiveSearch();
     return Positioned(
-      bottom: 160,
+      bottom: 264,
       left: 16,
       right: 16,
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: AppColors.surface.withOpacity(0.95),
+          color: _MapUI.chipDark,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: AppColors.surfaceVariant,
-          ),
+          boxShadow: const [
+            BoxShadow(color: Colors.black26, blurRadius: 14, offset: Offset(0, 4)),
+          ],
         ),
         child: Row(
           children: [
@@ -364,7 +393,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                   const Text(
                     'Поиск включается в 19:00',
                     style: TextStyle(
-                      color: AppColors.textPrimary,
+                      color: Colors.white,
                       fontWeight: FontWeight.w600,
                       fontSize: 14,
                     ),
@@ -372,7 +401,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                   Text(
                     'Осталось ${TimeUtils.formatDuration(timeLeft)}',
                     style: const TextStyle(
-                      color: AppColors.textSecondary,
+                      color: Color(0xFFAFAFC0),
                       fontSize: 12,
                     ),
                   ),
@@ -484,6 +513,43 @@ class _MapScreenState extends ConsumerState<MapScreen>
 
 // ===== Вспомогательные виджеты =====
 
+class _CircleIconButton extends StatelessWidget {
+  final IconData icon;
+  final Color? iconColor;
+  final VoidCallback onTap;
+  final String tooltip;
+
+  const _CircleIconButton({
+    required this.icon,
+    required this.onTap,
+    required this.tooltip,
+    this.iconColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: tooltip,
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          width: 48,
+          height: 48,
+          decoration: BoxDecoration(
+            color: _MapUI.chipDark,
+            shape: BoxShape.circle,
+            border: Border.all(color: _MapUI.chipDarkBorder),
+            boxShadow: const [
+              BoxShadow(color: Colors.black38, blurRadius: 12, offset: Offset(0, 4)),
+            ],
+          ),
+          child: Icon(icon, color: iconColor ?? Colors.white, size: 22),
+        ),
+      ),
+    );
+  }
+}
+
 class _MyLocationMarker extends StatelessWidget {
   final AnimationController pulseController;
 
@@ -505,7 +571,7 @@ class _MyLocationMarker extends StatelessWidget {
                 height: 52,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: AppColors.primary.withOpacity(0.15 * (1 - pulseController.value)),
+                  color: AppColors.primary.withOpacity(0.18 * (1 - pulseController.value)),
                 ),
               ),
             ),
@@ -549,9 +615,9 @@ class _BeaconBadge extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
-          color: AppColors.surface.withOpacity(0.95),
+          color: _MapUI.chipDark,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: AppColors.primary.withOpacity(0.3)),
+          border: Border.all(color: AppColors.primary.withOpacity(0.35)),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -562,7 +628,7 @@ class _BeaconBadge extends StatelessWidget {
               child: Text(
                 text,
                 style: const TextStyle(
-                  color: AppColors.textPrimary,
+                  color: Colors.white,
                   fontSize: 13,
                   fontWeight: FontWeight.w500,
                 ),
@@ -570,39 +636,8 @@ class _BeaconBadge extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 6),
-            const Icon(Icons.edit_outlined,
-                size: 14, color: AppColors.textSecondary),
+            const Icon(Icons.edit_outlined, size: 14, color: Color(0xFFAFAFC0)),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class _PanicButton extends StatelessWidget {
-  final VoidCallback onTap;
-  const _PanicButton({required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 48,
-        height: 48,
-        decoration: BoxDecoration(
-          color: const Color(0xFFD32F2F),
-          shape: BoxShape.circle,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.red.withOpacity(0.4),
-              blurRadius: 16,
-              spreadRadius: 2,
-            ),
-          ],
-        ),
-        child: const Center(
-          child: Text('🆘', style: TextStyle(fontSize: 22)),
         ),
       ),
     );

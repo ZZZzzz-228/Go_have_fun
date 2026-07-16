@@ -7,6 +7,9 @@ import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/register_screen.dart';
 import '../../features/auth/presentation/screens/profile_setup_screen.dart';
 import '../../features/map/presentation/screens/map_screen.dart';
+import '../../features/friends/presentation/screens/friends_screen.dart';
+import '../../features/chat/presentation/screens/chats_list_screen.dart';
+import '../../features/checkins/presentation/screens/checkins_screen.dart';
 import '../../features/chat/presentation/screens/chat_screen.dart';
 import '../../features/chat/presentation/screens/chat_expired_screen.dart';
 import '../../features/profile/presentation/screens/profile_screen.dart';
@@ -60,6 +63,21 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             path: RouteNames.map,
             name: RouteNames.map,
             builder: (context, state) => const MapScreen(),
+          ),
+          GoRoute(
+            path: RouteNames.friends,
+            name: RouteNames.friends,
+            builder: (context, state) => const FriendsScreen(),
+          ),
+          GoRoute(
+            path: RouteNames.chatsList,
+            name: RouteNames.chatsList,
+            builder: (context, state) => const ChatsListScreen(),
+          ),
+          GoRoute(
+            path: RouteNames.checkins,
+            name: RouteNames.checkins,
+            builder: (context, state) => const CheckinsScreen(),
           ),
           GoRoute(
             path: RouteNames.profile,

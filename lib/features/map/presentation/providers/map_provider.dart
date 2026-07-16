@@ -1,10 +1,28 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:math';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:http/http.dart' as http;
 import 'package:latlong2/latlong.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../domain/entities/location_entity.dart';
+
+/// Погода по коду Open-Meteo (WMO weather code) -> эмодзи
+String weatherEmojiFromCode(int code) {
+  if (code == 0) return '☀️';
+  if (code == 1 || code == 2) return '🌤️';
+  if (code == 3) return '☁️';
+  if (code == 45 || code == 48) return '🌫️';
+  if (code >= 51 && code <= 57) return '🌦️';
+  if (code >= 61 && code <= 67) return '🌧️';
+  if (code >= 71 && code <= 77) return '🌨️';
+  if (code >= 80 && code <= 82) return '🌦️';
+  if (code >= 85 && code <= 86) return '🌨️';
+  if (code >= 95) return '⛈️';
+  return '⛅';
+}
 
 // ===== Вспомогательные типы =====
 
@@ -37,6 +55,12 @@ class MapState {
   final bool isLoading;
   final String? error;
 
+  // Улица и погода (авто-определение)
+  final String? streetName;
+  final double? temperatureC;
+  final String weatherEmoji;
+  final bool isLocatingStreet;
+
   const MapState({
     this.myLocation,
     this.nearbyUsers = const [],
@@ -48,6 +72,10 @@ class MapState {
     this.isPanicMode = false,
     this.isLoading = false,
     this.error,
+    this.streetName,
+    this.temperatureC,
+    this.weatherEmoji = '☀️',
+    this.isLocatingStreet = false,
   });
 
   MapState copyWith({
@@ -61,6 +89,10 @@ class MapState {
     bool? isPanicMode,
     bool? isLoading,
     String? error,
+    String? streetName,
+    double? temperatureC,
+    String? weatherEmoji,
+    bool? isLocatingStreet,
   }) =>
       MapState(
         myLocation: myLocation ?? this.myLocation,
@@ -74,6 +106,10 @@ class MapState {
         isPanicMode: isPanicMode ?? this.isPanicMode,
         isLoading: isLoading ?? this.isLoading,
         error: error ?? this.error,
+        streetName: streetName ?? this.streetName,
+        temperatureC: temperatureC ?? this.temperatureC,
+        weatherEmoji: weatherEmoji ?? this.weatherEmoji,
+        isLocatingStreet: isLocatingStreet ?? this.isLocatingStreet,
       );
 }
 
@@ -88,7 +124,9 @@ class MapNotifier extends StateNotifier<MapState> {
 
   Timer? _locationTimer;
   Timer? _searchTimer;
+  Timer? _weatherRefreshTimer;
   StreamSubscription<Position>? _positionStream;
+  LatLng? _lastGeoFetchLocation;
 
   /// Инициализировать геолокацию
   Future<void> initLocation() async {
@@ -136,6 +174,17 @@ class MapNotifier extends StateNotifier<MapState> {
         nearbyUsers: _generateMockUsers(loc),
       );
 
+      // Определить улицу и погоду автоматически
+      _updateStreetAndWeather(loc);
+
+      // Обновлять погоду каждые 10 минут (время всегда берётся системное — автоматически)
+      _weatherRefreshTimer?.cancel();
+      _weatherRefreshTimer = Timer.periodic(const Duration(minutes: 10), (_) {
+        if (state.myLocation != null) {
+          _updateStreetAndWeather(state.myLocation!, forceWeather: true);
+        }
+      });
+
       // Запустить слежение
       _startLocationTracking();
     } catch (e) {
@@ -161,7 +210,70 @@ class MapNotifier extends StateNotifier<MapState> {
         myLocation: loc,
         nearbyUsers: _generateMockUsers(loc), // в реальном — из Firestore
       );
+
+      // Обновляем улицу/погоду только если сместились заметно (~120м),
+      // чтобы не спамить запросы при каждом мелком движении
+      if (_lastGeoFetchLocation == null ||
+          Geolocator.distanceBetween(
+                _lastGeoFetchLocation!.latitude,
+                _lastGeoFetchLocation!.longitude,
+                loc.latitude,
+                loc.longitude,
+              ) >
+              120) {
+        _updateStreetAndWeather(loc);
+      }
     });
+  }
+
+  /// Автоматически определить название улицы (по гео) и погоду (по времени/координатам)
+  Future<void> _updateStreetAndWeather(LatLng loc,
+      {bool forceWeather = false}) async {
+    _lastGeoFetchLocation = loc;
+    state = state.copyWith(isLocatingStreet: true);
+
+    // Улица — обратное геокодирование
+    try {
+      final placemarks =
+          await placemarkFromCoordinates(loc.latitude, loc.longitude);
+      if (placemarks.isNotEmpty) {
+        final p = placemarks.first;
+        final street = (p.thoroughfare != null && p.thoroughfare!.isNotEmpty)
+            ? p.thoroughfare!
+            : (p.street ?? p.subLocality ?? p.locality ?? 'Твоё местоположение');
+        if (mounted) {
+          state = state.copyWith(streetName: street, isLocatingStreet: false);
+        }
+      } else if (mounted) {
+        state = state.copyWith(isLocatingStreet: false);
+      }
+    } catch (_) {
+      if (mounted) state = state.copyWith(isLocatingStreet: false);
+    }
+
+    // Погода — Open-Meteo, без ключа, по текущим координатам
+    try {
+      final uri = Uri.parse(
+        'https://api.open-meteo.com/v1/forecast'
+        '?latitude=${loc.latitude}&longitude=${loc.longitude}'
+        '&current_weather=true',
+      );
+      final res = await http.get(uri).timeout(const Duration(seconds: 8));
+      if (res.statusCode == 200 && mounted) {
+        final data = jsonDecode(res.body) as Map<String, dynamic>;
+        final current = data['current_weather'] as Map<String, dynamic>?;
+        if (current != null) {
+          final temp = (current['temperature'] as num).toDouble();
+          final code = (current['weathercode'] as num).toInt();
+          state = state.copyWith(
+            temperatureC: temp,
+            weatherEmoji: weatherEmojiFromCode(code),
+          );
+        }
+      }
+    } catch (_) {
+      // тихо игнорируем — погода необязательна для работы карты
+    }
   }
 
   /// Начать сессию поиска (2 часа)
@@ -299,6 +411,7 @@ class MapNotifier extends StateNotifier<MapState> {
   void dispose() {
     _locationTimer?.cancel();
     _searchTimer?.cancel();
+    _weatherRefreshTimer?.cancel();
     _positionStream?.cancel();
     super.dispose();
   }
