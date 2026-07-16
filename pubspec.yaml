@@ -1,0 +1,95 @@
+name: go_have_fun
+description: "Go Have Fun — приложение для живых знакомств рядом с тобой"
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.3.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # State management
+  flutter_riverpod: ^2.5.1
+  riverpod_annotation: ^2.3.5
+
+  # Navigation
+  go_router: ^14.0.0
+
+  # Firebase / Backend
+  firebase_core: ^3.1.1
+  firebase_auth: ^5.1.1
+  cloud_firestore: ^5.1.0
+  firebase_storage: ^12.1.0
+  firebase_messaging: ^15.0.4
+
+  # Maps
+  flutter_map: ^7.0.2
+  latlong2: ^0.9.1
+  geolocator: ^12.0.0
+  geocoding: ^3.0.0
+
+  # UI
+  cupertino_icons: ^1.0.8
+  cached_network_image: ^3.3.1
+  image_picker: ^1.1.2
+  flutter_svg: ^2.0.10+1
+  lottie: ^3.1.2
+  shimmer: ^3.0.0
+  flutter_animate: ^4.5.0
+  percent_indicator: ^4.2.3
+  badges: ^3.1.2
+
+  # Chat / Real-time
+  intl: ^0.19.0
+
+  # Utils
+  uuid: ^4.4.0
+  shared_preferences: ^2.2.3
+  permission_handler: ^11.3.1
+  url_launcher: ^6.3.0
+  connectivity_plus: ^6.0.3
+  package_info_plus: ^8.0.0
+  equatable: ^2.0.5
+  dartz: ^0.10.1
+  freezed_annotation: ^2.4.4
+  json_annotation: ^4.9.0
+  logger: ^2.4.0
+
+  # Local notifications
+  flutter_local_notifications: ^17.2.1+2
+
+  # Haptics
+  vibration: ^2.0.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+  build_runner: ^2.4.11
+  riverpod_generator: ^2.4.3
+  freezed: ^2.5.7
+  json_serializable: ^6.8.0
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/images/
+    - assets/icons/
+    - assets/animations/
+
+  fonts:
+    - family: Gilroy
+      fonts:
+        - asset: assets/fonts/Gilroy-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Gilroy-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Gilroy-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Gilroy-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/Gilroy-ExtraBold.ttf
+          weight: 800
