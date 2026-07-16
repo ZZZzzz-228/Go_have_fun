@@ -341,7 +341,6 @@ class MapNotifier extends StateNotifier<MapState> {
 
   List<MapUserEntity> _generateMockUsers(LatLng center) {
     if (!state.isSearchActive) return [];
-    final rnd = Random();
     final users = <MapUserEntity>[];
     const names = [
       'Анна', 'Мария', 'Дмитрий', 'Алексей',
@@ -355,6 +354,7 @@ class MapNotifier extends StateNotifier<MapState> {
       ['🎸', 'На концерт вместе'],
     ];
 
+    final rnd = Random();
     final count = 3 + rnd.nextInt(5);
     for (int i = 0; i < count; i++) {
       // Случайное смещение в 100м (анти-сталкинг — дополнительно ещё +50м)
@@ -381,7 +381,6 @@ class MapNotifier extends StateNotifier<MapState> {
   }
 
   List<SafeZone> _generateMockSafeZones(LatLng center) {
-    final rnd = Random();
     return [
       SafeZone(
         id: 'sz1',

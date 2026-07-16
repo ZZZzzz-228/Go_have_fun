@@ -3,9 +3,6 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/router/route_names.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/time_utils.dart';
-import '../../../../shared/widgets/liquid_glass.dart';
-import '../widgets/profile_photo_grid.dart';
-import '../widgets/profile_stat_card.dart';
 import '../widgets/beacon_selector.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -16,351 +13,299 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  // Mock данные
   final String _name = 'Алекс';
   final int _age = 24;
-  final String _bio = 'Люблю кофе, велопрогулки и случайные встречи 🚴';
+  final String _bio = 'Люблю кофе, велопрогулки и случайные встречи';
   final bool _isSearchActive = false;
   final DateTime _joinedAt = DateTime(2024, 3, 15);
   final int _meetingsCount = 12;
   final int _chatsCount = 47;
 
-  String? _selectedBeaconEmoji;
-  String? _selectedBeaconText;
+  String? _selectedBeaconLabel;
 
   @override
   Widget build(BuildContext context) {
+    final initials = _name.isEmpty ? 'A' : _name[0].toUpperCase();
+    final days =
+        DateTime.now().difference(_joinedAt).inDays;
+
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: AppGradientBackground(
-        child: CustomScrollView(
-          slivers: [
+      body: SafeArea(
+        bottom: false,
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
+          children: [
             // ===== App Bar =====
-            SliverAppBar(
-              expandedHeight: 280,
-              pinned: true,
-              backgroundColor: Colors.transparent,
-              actions: [
-                IconButton(
-                  icon: const Icon(Icons.edit_outlined, color: Colors.white),
-                  onPressed: () => context.go(RouteNames.editProfile),
+            Row(
+              children: [
+                Text(
+                  'Профиль',
+                  style: Theme.of(context).textTheme.headlineLarge,
                 ),
+                const Spacer(),
                 IconButton(
-                  icon: const Icon(
-                    Icons.settings_outlined,
-                    color: Colors.white,
+                  icon: const Icon(Icons.tune_rounded),
+                  tooltip: 'Настройки',
+                  onPressed: _showSettingsSheet,
+                  style: IconButton.styleFrom(
+                    backgroundColor: AppColors.surface,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      side: const BorderSide(color: AppColors.border),
+                    ),
                   ),
-                  onPressed: () => _showSettings(),
+                ),
+                const SizedBox(width: 8),
+                IconButton(
+                  icon: const Icon(Icons.edit_outlined),
+                  tooltip: 'Редактировать',
+                  onPressed: () => context.go(RouteNames.editProfile),
+                  style: IconButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
                 ),
               ],
-              flexibleSpace: FlexibleSpaceBar(
-                background: _buildProfileHeader(),
-              ),
             ),
+            const SizedBox(height: 24),
 
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // ===== Имя и статус =====
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                '$_name, $_age',
-                                style: const TextStyle(
-                                  color: AppColors.textPrimary,
-                                  fontSize: 26,
-                                  fontWeight: FontWeight.w800,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                'С нами с ${TimeUtils.formatJoinDate(_joinedAt)}',
-                                style: const TextStyle(
-                                  color: AppColors.textSecondary,
-                                  fontSize: 13,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        // Переключатель поиска
-                        _SearchToggle(
-                          isActive: _isSearchActive,
-                          onToggle: () => _toggleSearch(),
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 16),
-
-                    // ===== Биография =====
-                    if (_bio.isNotEmpty) ...[
-                      LiquidGlassCard(
-                        borderRadius: 16,
-                        padding: const EdgeInsets.all(14),
-                        child: Text(
-                          _bio,
-                          style: const TextStyle(
-                            color: AppColors.textPrimary,
-                            fontSize: 15,
-                            height: 1.5,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                    ],
-
-                    // ===== Маяк-статус =====
-                    BeaconSelector(
-                      selectedEmoji: _selectedBeaconEmoji,
-                      selectedText: _selectedBeaconText,
-                      onSelected: (emoji, text) {
-                        setState(() {
-                          _selectedBeaconEmoji = emoji;
-                          _selectedBeaconText = text;
-                        });
-                      },
-                    ),
-
-                    const SizedBox(height: 24),
-
-                    // ===== Статистика =====
-                    const Text(
-                      'Моя статистика',
-                      style: TextStyle(
-                        color: AppColors.textPrimary,
-                        fontSize: 17,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: ProfileStatCard(
-                            icon: '🤝',
-                            label: 'Встреч',
-                            value: '$_meetingsCount',
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: ProfileStatCard(
-                            icon: '💬',
-                            label: 'Чатов',
-                            value: '$_chatsCount',
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: ProfileStatCard(
-                            icon: '📅',
-                            label: 'Дней с нами',
-                            value:
-                            '${DateTime.now().difference(_joinedAt).inDays}',
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 24),
-
-                    // ===== Переход к паре =====
-                    _buildCoupleSection(),
-
-                    const SizedBox(height: 24),
-
-                    // ===== Фото =====
-                    const Text(
-                      'Мои фото',
-                      style: TextStyle(
-                        color: AppColors.textPrimary,
-                        fontSize: 17,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    const ProfilePhotoGrid(photoUrls: []),
-
-                    const SizedBox(height: 32),
-
-                    // ===== Опасная зона =====
-                    _buildDangerZone(),
-
-                    const SizedBox(height: 32),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildProfileHeader() {
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        // Фон с градиентом
-        Container(
-          decoration: const BoxDecoration(gradient: AppColors.heroGradient),
-        ),
-        // Аватар
-        Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const SizedBox(height: 60),
-              Container(
-                width: 100,
-                height: 100,
+            // ===== Аватар без фото =====
+            Center(
+              child: Container(
+                width: 96,
+                height: 96,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Colors.white.withValues(alpha: 0.2),
-                  border: Border.all(color: Colors.white, width: 3),
+                  gradient: AppColors.primaryGradient,
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.secondary.withValues(alpha: 0.5),
-                      blurRadius: 30,
-                      spreadRadius: 4,
+                      color: AppColors.primary.withValues(alpha: 0.20),
+                      blurRadius: 24,
+                      spreadRadius: -4,
                     ),
                   ],
                 ),
-                child: const Center(
-                  child: Text('👤', style: TextStyle(fontSize: 48)),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildCoupleSection() {
-    return GestureDetector(
-      onTap: () => context.go(RouteNames.couple),
-      child: LiquidGlassCard(
-        borderRadius: 18,
-        padding: const EdgeInsets.all(16),
-        tint: AppColors.coupleGold,
-        showGlow: true,
-        child: const Row(
-          children: [
-            Text('💑', style: TextStyle(fontSize: 32)),
-            SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Штамп в паспорте',
-                    style: TextStyle(
-                      color: AppColors.textPrimary,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
+                child: Center(
+                  child: Text(
+                    initials,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 38,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -1,
                     ),
                   ),
-                  SizedBox(height: 2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // ===== Имя + статус-онлайн =====
+            Center(
+              child: Column(
+                children: [
                   Text(
-                    'Найди свою пару и отмечайте дни вместе',
-                    style: TextStyle(
+                    '$_name, $_age',
+                    style: Theme.of(context).textTheme.displaySmall,
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    'С нами с ${TimeUtils.formatJoinDate(_joinedAt)}',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: AppColors.textSecondary,
-                      fontSize: 13,
                     ),
+                  ),
+                  const SizedBox(height: 12),
+                  _SearchToggle(
+                    isActive: _isSearchActive,
+                    onToggle: () => setState(() {}),
                   ),
                 ],
               ),
             ),
-            Icon(Icons.chevron_right_rounded, color: AppColors.textSecondary),
+            const SizedBox(height: 28),
+
+            // ===== Био =====
+            if (_bio.isNotEmpty)
+              _ModernCard(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.10),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(
+                        Icons.format_quote_rounded,
+                        color: AppColors.primary,
+                        size: 20,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        _bio,
+                        style:
+                        Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            const SizedBox(height: 20),
+
+            // ===== Статус-маяк (без эмодзи, иконки) =====
+            BeaconSelector(
+              selectedLabel: _selectedBeaconLabel,
+              onSelected: (label) =>
+                  setState(() => _selectedBeaconLabel = label),
+            ),
+            const SizedBox(height: 24),
+
+            // ===== Статистика =====
+            Text(
+              'Статистика',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: _StatCard(
+                    icon: Icons.handshake_rounded,
+                    color: AppColors.primary,
+                    value: '$_meetingsCount',
+                    label: 'Встреч',
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: _StatCard(
+                    icon: Icons.chat_bubble_rounded,
+                    color: AppColors.secondary,
+                    value: '$_chatsCount',
+                    label: 'Чатов',
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: _StatCard(
+                    icon: Icons.calendar_month_rounded,
+                    color: AppColors.info,
+                    value: '$days',
+                    label: 'Дней',
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+
+            // ===== Штамп пары =====
+            _CoupleCard(
+              onTap: () => context.go(RouteNames.couple),
+            ),
+            const SizedBox(height: 24),
+
+            // ===== Опасная зона =====
+            Text(
+              'Аккаунт',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            const SizedBox(height: 12),
+            _SettingsRow(
+              icon: Icons.notifications_active_outlined,
+              label: 'Уведомления',
+              onTap: () {},
+            ),
+            const SizedBox(height: 8),
+            _SettingsRow(
+              icon: Icons.lock_outline_rounded,
+              label: 'Конфиденциальность',
+              onTap: () {},
+            ),
+            const SizedBox(height: 8),
+            _SettingsRow(
+              icon: Icons.help_outline_rounded,
+              label: 'Поддержка',
+              onTap: () {},
+            ),
+            const SizedBox(height: 20),
+            _SettingsRow(
+              icon: Icons.logout_rounded,
+              label: 'Выйти',
+              color: AppColors.error,
+              onTap: () => context.go(RouteNames.login),
+            ),
+            const SizedBox(height: 8),
+            _SettingsRow(
+              icon: Icons.delete_outline_rounded,
+              label: 'Удалить аккаунт',
+              color: AppColors.error,
+              onTap: _confirmDelete,
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildDangerZone() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Зона опасности',
-          style: TextStyle(
-            color: AppColors.error,
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        const SizedBox(height: 10),
-        OutlinedButton(
-          style: OutlinedButton.styleFrom(
-            foregroundColor: AppColors.error,
-            side: const BorderSide(color: AppColors.error),
-            minimumSize: const Size(double.infinity, 48),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(14),
-            ),
-          ),
-          onPressed: _showDeleteAccount,
-          child: const Text('Удалить аккаунт'),
-        ),
-      ],
-    );
-  }
-
-  void _toggleSearch() {
-    // TODO: обновить в Firebase
-    setState(() {});
-  }
-
-  void _showSettings() {
+  void _showSettingsSheet() {
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (_) => Padding(
-        padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-        child: LiquidGlassCard(
-          borderRadius: 28,
-          padding: const EdgeInsets.all(24),
+      backgroundColor: AppColors.surface,
+      isScrollControlled: false,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      builder: (_) => SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
           child: Column(
             mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Container(
-                width: 48,
-                height: 4,
-                margin: const EdgeInsets.only(bottom: 16),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.24),
-                  borderRadius: BorderRadius.circular(2),
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(
+                    color: AppColors.borderStrong,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
                 ),
               ),
-              _SettingsTile(
-                icon: Icons.logout,
-                label: 'Выйти',
-                onTap: () {
-                  Navigator.pop(context);
-                  context.go(RouteNames.login);
-                },
+              Text(
+                'Настройки',
+                style: Theme.of(context).textTheme.titleLarge,
               ),
-              _SettingsTile(
-                icon: Icons.notifications_outlined,
-                label: 'Уведомления',
-                onTap: () {},
+              const SizedBox(height: 16),
+              _SettingsRow(
+                icon: Icons.tune_rounded,
+                label: 'Основные',
+                onTap: () => Navigator.pop(context),
               ),
-              _SettingsTile(
+              const SizedBox(height: 8),
+              _SettingsRow(
                 icon: Icons.shield_outlined,
-                label: 'Конфиденциальность',
-                onTap: () {},
+                label: 'Безопасность',
+                onTap: () => Navigator.pop(context),
+              ),
+              const SizedBox(height: 8),
+              _SettingsRow(
+                icon: Icons.info_outline,
+                label: 'О приложении',
+                onTap: () => Navigator.pop(context),
               ),
             ],
           ),
@@ -369,35 +314,223 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  void _showDeleteAccount() {
+  void _confirmDelete() {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        backgroundColor: AppColors.surface,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text(
-          'Удалить аккаунт?',
-          style: TextStyle(color: AppColors.textPrimary),
-        ),
+        title: const Text('Удалить аккаунт?'),
         content: const Text(
           'Все данные будут безвозвратно удалены. Действие нельзя отменить.',
-          style: TextStyle(color: AppColors.textSecondary),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text(
-              'Отмена',
-              style: TextStyle(color: AppColors.textSecondary),
-            ),
+            child: const Text('Отмена'),
           ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
+          TextButton(
             onPressed: () {
               Navigator.pop(context);
               context.go(RouteNames.login);
             },
+            style: TextButton.styleFrom(foregroundColor: AppColors.error),
             child: const Text('Удалить'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// =====================================================================
+// Внутренние виджеты — минималистичные, content-first
+// =====================================================================
+
+class _ModernCard extends StatelessWidget {
+  final Widget child;
+  final EdgeInsetsGeometry padding;
+  final VoidCallback? onTap;
+  final Color? tint;
+
+  const _ModernCard({
+    required this.child,
+    this.padding = const EdgeInsets.all(18),
+    this.onTap,
+    this.tint,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: AppColors.surface,
+      borderRadius: BorderRadius.circular(20),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(20),
+        child: Container(
+          padding: padding,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: AppColors.border, width: 1),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.04),
+                blurRadius: 14,
+                offset: const Offset(0, 4),
+              ),
+            ],
+            color: tint ?? AppColors.surface,
+          ),
+          child: child,
+        ),
+      ),
+    );
+  }
+}
+
+class _StatCard extends StatelessWidget {
+  final IconData icon;
+  final Color color;
+  final String value;
+  final String label;
+
+  const _StatCard({
+    required this.icon,
+    required this.color,
+    required this.value,
+    required this.label,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return _ModernCard(
+      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+      child: Column(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(icon, color: color, size: 22),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            value,
+            style: Theme.of(context).textTheme.headlineMedium,
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CoupleCard extends StatelessWidget {
+  final VoidCallback onTap;
+  const _CoupleCard({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return _ModernCard(
+      onTap: onTap,
+      padding: const EdgeInsets.all(18),
+      tint: AppColors.coupleGold.withValues(alpha: 0.06),
+      child: Row(
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [AppColors.coupleGold, AppColors.secondary],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: const Icon(
+              Icons.diversity_3_rounded,
+              color: Colors.white,
+              size: 24,
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Штамп в паспорте',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'Найди свою пару и отмечайте дни вместе',
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ],
+            ),
+          ),
+          const Icon(
+            Icons.chevron_right_rounded,
+            color: AppColors.textSecondary,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SettingsRow extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+  final Color? color;
+
+  const _SettingsRow({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+    this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final c = color ?? AppColors.textPrimary;
+    return _ModernCard(
+      onTap: onTap,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      child: Row(
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: c.withValues(alpha: 0.10),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(icon, color: c, size: 20),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              label,
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                color: c,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+          const Icon(
+            Icons.chevron_right_rounded,
+            color: AppColors.textSecondary,
+            size: 20,
           ),
         ],
       ),
@@ -413,74 +546,49 @@ class _SearchToggle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onToggle,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        decoration: BoxDecoration(
-          color: isActive
-              ? AppColors.success.withValues(alpha: 0.15)
-              : Colors.white.withValues(alpha: 0.06),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onToggle,
+        borderRadius: BorderRadius.circular(999),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 250),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          decoration: BoxDecoration(
             color: isActive
-                ? AppColors.success
-                : Colors.white.withValues(alpha: 0.14),
+                ? AppColors.success.withValues(alpha: 0.12)
+                : AppColors.surface,
+            borderRadius: BorderRadius.circular(999),
+            border: Border.all(
+              color: isActive ? AppColors.success : AppColors.border,
+              width: 1,
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 8,
+                height: 8,
+                decoration: BoxDecoration(
+                  color: isActive ? AppColors.success : AppColors.textSecondary,
+                  shape: BoxShape.circle,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                isActive ? 'В поиске' : 'Невидимый',
+                style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                  color: isActive
+                      ? AppColors.success
+                      : AppColors.textSecondary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
           ),
         ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 8,
-              height: 8,
-              decoration: BoxDecoration(
-                color: isActive ? AppColors.success : AppColors.textSecondary,
-                shape: BoxShape.circle,
-              ),
-            ),
-            const SizedBox(width: 6),
-            Text(
-              isActive ? 'В поиске' : 'Offline',
-              style: TextStyle(
-                color: isActive ? AppColors.success : AppColors.textSecondary,
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
-        ),
       ),
-    );
-  }
-}
-
-class _SettingsTile extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-
-  const _SettingsTile({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      leading: Icon(icon, color: AppColors.textSecondary),
-      title: Text(
-        label,
-        style: const TextStyle(color: AppColors.textPrimary, fontSize: 16),
-      ),
-      trailing: const Icon(
-        Icons.chevron_right_rounded,
-        color: AppColors.textSecondary,
-      ),
-      onTap: onTap,
-      contentPadding: EdgeInsets.zero,
     );
   }
 }

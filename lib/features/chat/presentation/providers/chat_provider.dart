@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:math';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_constants.dart';
-import '../../domain/entities/chat_entity.dart';
 
 // ===== Мок-сообщение =====
 class MockMessage {

@@ -64,7 +64,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
       body: Stack(
         children: [
           // ===== КАРТА (тёмная, в стиле приложения) =====
-          _buildMap(mapState),
+          _buildMap(context, mapState),
 
           // ===== Шапка: улица + погода =====
           _buildTopBar(mapState),
@@ -120,7 +120,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
 
   // ===================== КАРТА =====================
 
-  Widget _buildMap(MapState mapState) {
+  Widget _buildMap(BuildContext context, MapState mapState) {
     final center = mapState.myLocation ?? const LatLng(55.7558, 37.6173);
 
     return FlutterMap(
@@ -140,12 +140,14 @@ class _MapScreenState extends ConsumerState<MapScreen>
           'https://{s}.basemaps.cartocdn.com/dark_matter_nolabels/{z}/{x}/{y}{r}.png',
           subdomains: const ['a', 'b', 'c', 'd'],
           userAgentPackageName: 'com.gohavefun.app',
+          retinaMode: RetinaMode.isHighDensity(context),
         ),
         TileLayer(
           urlTemplate:
           'https://{s}.basemaps.cartocdn.com/dark_matter_only_labels/{z}/{x}/{y}{r}.png',
           subdomains: const ['a', 'b', 'c', 'd'],
           userAgentPackageName: 'com.gohavefun.app',
+          retinaMode: RetinaMode.isHighDensity(context),
         ),
 
         // Heatmap пользователей (зоны скопления, анти-сталкинг)

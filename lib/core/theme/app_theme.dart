@@ -2,13 +2,18 @@ import 'package:flutter/material.dart';
 import 'app_colors.dart';
 import 'app_text_styles.dart';
 
+/// Светлая content-first тема как основная. Скруглённые карточки,
+/// минимум шума, яркие акценты через color/spacing.
 class AppTheme {
   AppTheme._();
 
-  static ThemeData get darkTheme => ThemeData(
+  static const double cardRadius = 20;
+  static const double buttonRadius = 16;
+
+  static ThemeData get lightTheme => ThemeData(
     useMaterial3: true,
-    brightness: Brightness.dark,
-    colorScheme: ColorScheme.dark(
+    brightness: Brightness.light,
+    colorScheme: ColorScheme.light(
       primary: AppColors.primary,
       secondary: AppColors.secondary,
       surface: AppColors.surface,
@@ -18,31 +23,26 @@ class AppTheme {
       onSurface: AppColors.textPrimary,
     ),
     scaffoldBackgroundColor: AppColors.background,
-    fontFamily: 'Gilroy',
-    textTheme: AppTextStyles.darkTextTheme,
+    textTheme: AppTextStyles.lightTextTheme,
     appBarTheme: const AppBarTheme(
       backgroundColor: Colors.transparent,
       elevation: 0,
+      scrolledUnderElevation: 0,
       centerTitle: true,
       iconTheme: IconThemeData(color: AppColors.textPrimary),
       titleTextStyle: TextStyle(
         color: AppColors.textPrimary,
-        fontSize: 20,
+        fontSize: 18,
         fontWeight: FontWeight.w700,
       ),
-    ),
-    bottomNavigationBarTheme: BottomNavigationBarThemeData(
-      backgroundColor: AppColors.surface,
-      selectedItemColor: AppColors.primary,
-      unselectedItemColor: AppColors.textSecondary,
-      type: BottomNavigationBarType.fixed,
-      elevation: 0,
     ),
     dialogTheme: DialogThemeData(
       backgroundColor: AppColors.surface,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(cardRadius),
       ),
+      titleTextStyle: AppTextStyles.lightTextTheme.titleLarge,
+      contentTextStyle: AppTextStyles.lightTextTheme.bodyMedium,
     ),
     tabBarTheme: const TabBarThemeData(
       labelColor: AppColors.textPrimary,
@@ -54,37 +54,93 @@ class AppTheme {
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         minimumSize: const Size(double.infinity, 56),
+        elevation: 0,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(buttonRadius),
         ),
-        textStyle: AppTextStyles.darkTextTheme.labelLarge,
+        textStyle: AppTextStyles.lightTextTheme.labelLarge,
+      ),
+    ),
+    outlinedButtonTheme: OutlinedButtonThemeData(
+      style: OutlinedButton.styleFrom(
+        foregroundColor: AppColors.primary,
+        side: BorderSide(color: AppColors.borderStrong),
+        minimumSize: const Size(double.infinity, 48),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(buttonRadius),
+        ),
       ),
     ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
-      fillColor: AppColors.surfaceVariant,
+      fillColor: AppColors.surface,
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
-        borderSide: BorderSide.none,
+        borderRadius: BorderRadius.circular(buttonRadius),
+        borderSide: BorderSide(color: AppColors.border),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(buttonRadius),
+        borderSide: BorderSide(color: AppColors.border),
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
-        borderSide: BorderSide(color: AppColors.primary, width: 2),
+        borderRadius: BorderRadius.circular(buttonRadius),
+        borderSide: const BorderSide(color: AppColors.primary, width: 2),
       ),
-      hintStyle: TextStyle(color: AppColors.textSecondary),
+      hintStyle: const TextStyle(color: AppColors.textSecondary),
+      labelStyle: const TextStyle(color: AppColors.textSecondary),
       contentPadding: const EdgeInsets.symmetric(
-        horizontal: 20,
+        horizontal: 16,
         vertical: 16,
       ),
     ),
     cardTheme: CardThemeData(
       color: AppColors.surface,
       elevation: 0,
+      margin: EdgeInsets.zero,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(cardRadius),
+        side: const BorderSide(color: AppColors.border, width: 1),
       ),
+    ),
+    dividerTheme: const DividerThemeData(
+      color: AppColors.border,
+      thickness: 1,
+      space: 1,
+    ),
+    bottomSheetTheme: const BottomSheetThemeData(
+      backgroundColor: AppColors.surface,
+      modalBackgroundColor: AppColors.surface,
+      elevation: 0,
+      showDragHandle: true,
+      dragHandleColor: AppColors.borderStrong,
     ),
   );
 
-  static ThemeData get lightTheme => darkTheme; // Оставляем тёмную как основную
+  /// Тёмная тема — fallback. На старых "glass-экранах" выглядит как раньше.
+  static ThemeData get darkTheme => ThemeData(
+    useMaterial3: true,
+    brightness: Brightness.dark,
+    colorScheme: ColorScheme.dark(
+      primary: AppColors.primary,
+      secondary: AppColors.secondary,
+      surface: AppColors.darkSurface,
+      error: AppColors.error,
+      onPrimary: Colors.white,
+      onSecondary: Colors.white,
+      onSurface: Colors.white,
+    ),
+    scaffoldBackgroundColor: AppColors.darkBackground,
+    textTheme: AppTextStyles.darkTextTheme,
+    elevatedButtonTheme: ElevatedButtonThemeData(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: AppColors.primary,
+        foregroundColor: Colors.white,
+        minimumSize: const Size(double.infinity, 56),
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(buttonRadius),
+        ),
+      ),
+    ),
+  );
 }
