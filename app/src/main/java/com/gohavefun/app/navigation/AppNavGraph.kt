@@ -7,14 +7,14 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.gohavefun.app.data.ThemeViewModel
-import com.gohavefun.app.ui.screens.ChatExpiredScreen
-import com.gohavefun.app.ui.screens.ChatScreen
-import com.gohavefun.app.ui.screens.LoginScreen
-import com.gohavefun.app.ui.screens.MainShell
-import com.gohavefun.app.ui.screens.OnboardingScreen
-import com.gohavefun.app.ui.screens.ProfileSetupScreen
-import com.gohavefun.app.ui.screens.RegisterScreen
-import com.gohavefun.app.ui.screens.SplashScreen
+import com.gohavefun.app.ui.screens.auth.LoginScreen
+import com.gohavefun.app.ui.screens.auth.OnboardingScreen
+import com.gohavefun.app.ui.screens.auth.ProfileSetupScreen
+import com.gohavefun.app.ui.screens.auth.RegisterScreen
+import com.gohavefun.app.ui.screens.auth.SplashScreen
+import com.gohavefun.app.ui.screens.chat.ChatExpiredScreen
+import com.gohavefun.app.ui.screens.chat.ChatScreen
+import com.gohavefun.app.ui.screens.main.MainShell
 
 @Composable
 fun AppNavGraph(themeVm: ThemeViewModel) {
