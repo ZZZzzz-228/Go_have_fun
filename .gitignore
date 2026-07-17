@@ -127,3 +127,11 @@ docker-compose.override.yml
 .grunt
 .lock-wscript
 
+
+# Gradle / Android build artifacts
+.gradle/
+.kotlin/
+app/build/
+build/
+*.iml
+.idea/

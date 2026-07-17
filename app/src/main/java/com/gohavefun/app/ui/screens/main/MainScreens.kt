@@ -1,13 +1,19 @@
 package com.gohavefun.app.ui.screens.main
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -17,7 +23,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Switch
@@ -28,15 +33,19 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.util.lerp
 import androidx.navigation.NavController
 import com.gohavefun.app.data.AppConstants
 import com.gohavefun.app.data.ThemeViewModel
@@ -52,13 +61,35 @@ import com.gohavefun.app.ui.components.SettingRow
 import com.gohavefun.app.ui.components.StatCard
 import com.gohavefun.app.ui.screens.map.MapScreen
 import com.gohavefun.app.ui.theme.AppColors
+import com.kyant.backdrop.Backdrop
+import com.kyant.backdrop.drawBackdrop
+import com.kyant.backdrop.backdrops.layerBackdrop
+import com.kyant.backdrop.backdrops.rememberLayerBackdrop
+import com.kyant.backdrop.effects.blur
+import com.kyant.backdrop.effects.lens
+import com.kyant.backdrop.effects.vibrancy
+import kotlinx.coroutines.launch
 
 @Composable
 fun MainShell(rootNav: NavController, themeVm: ThemeViewModel) {
     var currentIndex by remember { mutableStateOf(0) }
 
     Box(modifier = Modifier.fillMaxSize().background(AppColors.Background)) {
-        Box(modifier = Modifier.fillMaxSize().padding(bottom = 74.dp)) {
+        // Бэкдроп: захватывает всё, что нарисовано под таб-баром, чтобы стекло
+        // могло его размыть/преломить. Экраны рисуются на всю высоту (без
+        // отступа снизу под бар) — именно так стекло "видит" реальный контент,
+        // а не пустой фон. Поэтому каждый экран сам добавляет отступ под
+        // последним элементом, чтобы контент не терялся под баром.
+        val backdrop = rememberLayerBackdrop {
+            drawRect(AppColors.Background)
+            drawContent()
+        }
+
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .layerBackdrop(backdrop)
+        ) {
             when (currentIndex) {
                 0 -> MapScreen(rootNav)
                 1 -> CoupleScreen(onOpenMap = { currentIndex = 0 })
@@ -68,6 +99,7 @@ fun MainShell(rootNav: NavController, themeVm: ThemeViewModel) {
         }
 
         BottomBar(
+            backdrop = backdrop,
             currentIndex = currentIndex,
             onSelect = { currentIndex = it },
             modifier = Modifier.align(Alignment.BottomCenter)
@@ -77,48 +109,97 @@ fun MainShell(rootNav: NavController, themeVm: ThemeViewModel) {
 
 private data class NavItem(val emoji: String, val label: String)
 
+private val TabItemShape = RoundedCornerShape(24.dp)
+
 @Composable
-private fun BottomBar(currentIndex: Int, onSelect: (Int) -> Unit, modifier: Modifier = Modifier) {
+private fun BottomBar(
+    backdrop: Backdrop,
+    currentIndex: Int,
+    onSelect: (Int) -> Unit,
+    modifier: Modifier = Modifier
+) {
     val items = listOf(
         NavItem("🗺️", "Карта"),
         NavItem("💞", "Пара"),
         NavItem("🐱", "Котики"),
         NavItem("👤", "Профиль"),
     )
+    val animationScope = rememberCoroutineScope()
+
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .background(AppColors.Surface)
             .navigationBarsPadding()
-            .height(74.dp)
-            .padding(horizontal = 8.dp),
+            .padding(horizontal = 16.dp, vertical = 12.dp)
+            .height(72.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         items.forEachIndexed { i, item ->
             val selected = i == currentIndex
+            // У каждой плашки своя анимация нажатия.
+            val pressProgress = remember { Animatable(0f) }
+
             Column(
                 modifier = Modifier
-                    .weight(1f)
-                    .clip(RoundedCornerShape(14.dp))
-                    .clickable { onSelect(i) }
-                    .padding(vertical = 8.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+                    // Настоящее жидкое стекло: сэмплит backdrop и применяет
+                    // вибранс + блюр + линзу (преломление по краям формы).
+                    .drawBackdrop(
+                        backdrop = backdrop,
+                        shape = { TabItemShape },
+                        effects = {
+                            vibrancy()
+                            blur(4f.dp.toPx())
+                            lens(14f.dp.toPx(), 26f.dp.toPx())
+                        },
+                        // Масштаб при нажатии — в layerBlock, а не напрямую на
+                        // Modifier, иначе сам бэкдроп будет "плыть" вместе с
+                        // плашкой (см. tutorial "Interactive Glass Bottom Bar").
+                        layerBlock = {
+                            val progress = pressProgress.value
+                            val maxScale = (size.width + 10f.dp.toPx()) / size.width
+                            val scale = lerp(1f, maxScale, progress)
+                            scaleX = scale
+                            scaleY = scale
+                        },
+                        onDrawSurface = {
+                            if (selected) {
+                                // BlendMode.Hue — оттенок бэкдропа подстраивается
+                                // под цвет тинта, а не просто ложится поверх.
+                                val tint = Color(0xFF1F5FFF)
+                                drawRect(tint, blendMode = BlendMode.Hue)
+                                drawRect(tint.copy(alpha = 0.30f))
+                            } else {
+                                drawRect(Color.White.copy(alpha = 0.30f))
+                            }
+                        }
+                    )
+                    .clickable(interactionSource = null, indication = null) { onSelect(i) }
+                    .pointerInput(animationScope) {
+                        val animationSpec = spring(0.5f, 300f, 0.001f)
+                        awaitEachGesture {
+                            awaitFirstDown()
+                            animationScope.launch {
+                                pressProgress.animateTo(1f, animationSpec)
+                            }
+                            waitForUpOrCancellation()
+                            animationScope.launch {
+                                pressProgress.animateTo(0f, animationSpec)
+                            }
+                        }
+                    }
+                    .fillMaxHeight()
+                    .weight(1f),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
             ) {
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(if (selected) AppColors.SurfaceAlt else Color.Transparent)
-                        .padding(horizontal = 14.dp, vertical = 4.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(item.emoji, fontSize = 22.sp)
-                }
-                Spacer(Modifier.height(2.dp))
+                Text(item.emoji, fontSize = 20.sp)
+                Spacer(Modifier.height(3.dp))
                 Text(
                     item.label,
                     fontSize = 11.sp,
                     fontWeight = if (selected) FontWeight.W700 else FontWeight.W500,
-                    color = if (selected) AppColors.Primary else AppColors.TextSecondary
+                    color = if (selected) Color.White else AppColors.TextSecondary
                 )
             }
         }
@@ -161,7 +242,7 @@ fun CoupleScreen(onOpenMap: () -> Unit) {
                 Text("Перейти к карте", color = AppColors.TextPrimary, fontWeight = FontWeight.W700)
             }
         }
-        Spacer(Modifier.height(24.dp))
+        Spacer(Modifier.height(120.dp))
     }
 }
 
@@ -181,7 +262,7 @@ fun CatsScreen() {
             cats.forEach { (emoji, name, desc) ->
                 CatListItem(emoji, name, desc)
             }
-            Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(120.dp))
         }
     }
 }
@@ -260,8 +341,7 @@ fun ProfileScreen(rootNav: NavController, themeVm: ThemeViewModel) {
                 modifier = Modifier.fillMaxWidth(),
                 textAlign = TextAlign.Center
             )
-            Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(120.dp))
         }
     }
 }
-
