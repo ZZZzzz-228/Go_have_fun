@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/time_utils.dart';
-import '../../../../shared/widgets/liquid_glass.dart';
+import '../../../../shared/widgets/app_ui.dart';
 
 class SearchTimerWidget extends StatelessWidget {
   final int remainingSeconds;
@@ -14,7 +14,7 @@ class SearchTimerWidget extends StatelessWidget {
   });
 
   double get _progress {
-    const total = 2 * 60 * 60; // 2 часа
+    const total = 2 * 60 * 60;
     return remainingSeconds / total;
   }
 
@@ -22,13 +22,10 @@ class SearchTimerWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final timeStr = TimeUtils.formatSeconds(remainingSeconds);
 
-    return LiquidGlassCard(
-      borderRadius: 16,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      showGlow: true,
+    return MapOverlayPanel(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
         children: [
-          // Анимированный индикатор
           Container(
             width: 10,
             height: 10,
@@ -37,71 +34,60 @@ class SearchTimerWidget extends StatelessWidget {
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.success.withValues(alpha: 0.6),
+                  color: AppColors.success.withValues(alpha: 0.5),
                   blurRadius: 8,
-                  spreadRadius: 2,
+                  spreadRadius: 1,
                 ),
               ],
             ),
           ),
           const SizedBox(width: 10),
-
-          // Текст
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text(
+                Text(
                   'Поиск активен',
-                  style: TextStyle(
-                    color: AppColors.textPrimary,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                        color: AppColors.textMain(context),
+                      ),
                 ),
-                const SizedBox(height: 2),
-                // Прогресс-бар
+                const SizedBox(height: 6),
                 ClipRRect(
                   borderRadius: BorderRadius.circular(2),
                   child: LinearProgressIndicator(
                     value: _progress,
-                    minHeight: 3,
-                    backgroundColor: Colors.white.withValues(alpha: 0.12),
-                    valueColor: const AlwaysStoppedAnimation<Color>(
-                        AppColors.primary),
+                    minHeight: 4,
+                    backgroundColor: AppColors.primary.withValues(alpha: 0.12),
+                    valueColor:
+                        const AlwaysStoppedAnimation<Color>(AppColors.primary),
                   ),
                 ),
               ],
             ),
           ),
           const SizedBox(width: 12),
-
-          // Таймер
           Text(
             timeStr,
-            style: const TextStyle(
-              color: AppColors.primary,
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-              fontFeatures: [FontFeature.tabularFigures()],
-            ),
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  color: AppColors.primary,
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                ),
           ),
           const SizedBox(width: 8),
-
-          // Стоп
           GestureDetector(
             onTap: onStop,
             child: Container(
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.1),
+                color: AppColors.primary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.stop_rounded,
-                color: AppColors.textSecondary,
-                size: 16,
+                color: AppColors.textMuted(context),
+                size: 18,
               ),
             ),
           ),

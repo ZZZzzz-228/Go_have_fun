@@ -1,101 +1,113 @@
 import 'package:flutter/material.dart';
 
-/// Палитра Go Have Fun — content-first, светлая тема по умолчанию.
-/// Яркие акценты (vivid violet + hot pink) на нейтральной светлой
-/// поверхности. Старые имена оставлены, чтобы остальные экраны
-/// (chat, auth, friends...) не сломались.
+/// Яркая молодёжная палитра: карта — центр, акценты для МЭТЧ и действий.
 class AppColors {
   AppColors._();
 
-  // ===== Бренд =====
-  static const Color primary       = Color(0xFF7C3AED); // vivid violet
-  static const Color primaryDark   = Color(0xFF5B21B6);
-  static const Color secondary     = Color(0xFFEC4899); // hot pink
-  static const Color tertiary      = Color(0xFF5B21B6);
+  // ===== Бренд / МЭТЧ =====
+  static const Color primary = Color(0xFF6C5CE7);
+  static const Color primaryDark = Color(0xFF5A4BD1);
+  static const Color secondary = Color(0xFFFF6B9D);
+  static const Color match = Color(0xFFFF3366);
+  static const Color matchGlow = Color(0xFFFF6B9D);
+  /// Alias для совместимости с ColorScheme.tertiary
+  static const Color tertiary = match;
+  static const Color accent = Color(0xFF00D9A5);
+  static const Color accentAlt = Color(0xFFFFBE0B);
 
-  // ===== Светлые поверхности (основная тема) =====
-  static const Color background    = Color(0xFFFAFAFC); // off-white
-  static const Color surface       = Color(0xFFFFFFFF); // cards
-  static const Color surfaceAlt    = Color(0xFFF4F2F8); // tint
-  static const Color surfaceVariant = Color(0xFFF4F2F8);
+  // ===== Светлая тема =====
+  static const Color background = Color(0xFFF5F3FF);
+  static const Color surface = Color(0xFFFFFFFF);
+  static const Color surfaceAlt = Color(0xFFEDE9FE);
+  static const Color surfaceVariant = Color(0xFFF0ECFF);
+  static const Color mapOverlayLight = Color(0xE6FFFFFF);
 
-  // ===== Ночные поверхности (для darkTheme & старых glass-экранов) =====
-  static const Color darkBackground = Color(0xFF0A0815);
-  static const Color darkSurface    = Color(0xFF13102A);
+  // ===== Тёмная тема =====
+  static const Color darkBackground = Color(0xFF0D0B1A);
+  static const Color darkSurface = Color(0xFF1A1730);
+  static const Color darkSurfaceAlt = Color(0xFF252140);
+  static const Color mapOverlayDark = Color(0xCC0D0B1A);
 
   // ===== Обводки / тени =====
-  static const Color border        = Color(0xFFECEAEF); // очень тонкая светлая
-  static const Color borderStrong  = Color(0xFFD8D4DD);
-  static const Color overlay       = Color(0x10000000);
+  static const Color border = Color(0xFFE8E4F0);
+  static const Color borderStrong = Color(0xFFD4CEE8);
+  static const Color borderDark = Color(0xFF3D3658);
+  static const Color overlay = Color(0x18000000);
 
-  // "Стеклянные" оттенки (для существующих Liquid-glass экранов)
-  static const Color glassLight    = Color(0x14FFFFFF);
-  static const Color glassBorder   = Color(0x33C9A8FF);
-  static const Color glassDark     = Color(0xCC0A0514);
+  // Legacy glass (совместимость)
+  static const Color glassLight = Color(0x14FFFFFF);
+  static const Color glassBorder = Color(0x33C9A8FF);
+  static const Color glassDark = Color(0xCC0A0514);
 
   // ===== Текст =====
-  static const Color textPrimary   = Color(0xFF0F0A1F);
-  static const Color textSecondary = Color(0xFF6B6781);
-  static const Color textDisabled  = Color(0xFFA8A4B5);
+  static const Color textPrimary = Color(0xFF1A1033);
+  static const Color textSecondary = Color(0xFF6B6280);
+  static const Color textDisabled = Color(0xFFA8A0B8);
+  static const Color textPrimaryDark = Color(0xFFF5F0FF);
+  static const Color textSecondaryDark = Color(0xFFB8B0CC);
 
   // ===== Статусы =====
-  static const Color success       = Color(0xFF10B981);
-  static const Color error         = Color(0xFFEF4444);
-  static const Color warning       = Color(0xFFF59E0B);
-  static const Color info          = Color(0xFF3B82F6);
+  static const Color success = Color(0xFF00D9A5);
+  static const Color error = Color(0xFFFF4757);
+  static const Color warning = Color(0xFFFFBE0B);
+  static const Color info = Color(0xFF54A0FF);
 
   // ===== Таймер =====
-  static const Color timerGreen  = Color(0xFF10B981);
-  static const Color timerYellow = Color(0xFFF59E0B);
-  static const Color timerOrange = Color(0xFFF59E0B);
-  static const Color timerRed    = Color(0xFFEF4444);
-  static const Color timerDeep   = Color(0xFFEF4444);
+  static const Color timerGreen = success;
+  static const Color timerYellow = warning;
+  static const Color timerOrange = Color(0xFFFF8C42);
+  static const Color timerRed = error;
 
   // ===== Карта =====
-  static const Color mapHeatLow    = Color(0x337C3AED);
-  static const Color mapHeatMid    = Color(0x66EC4899);
-  static const Color mapHeatHigh   = Color(0xAAEC4899);
-  static const Color safeZone      = success;
-  static const Color activeUser    = primary;
-  static const Color inactiveUser  = textSecondary;
+  static const Color mapHeatLow = Color(0x336C5CE7);
+  static const Color mapHeatMid = Color(0x66FF6B9D);
+  static const Color mapHeatHigh = Color(0xAAFF3366);
+  static const Color safeZone = accent;
+  static const Color activeUser = primary;
+  static const Color inactiveUser = textSecondary;
 
-  static const Color femaleGlowStart = Color(0xFFFF5FA8);
-  static const Color femaleGlowEnd   = secondary;
-  static const Color maleGlowStart   = Color(0xFF7C4DFF);
-  static const Color maleGlowEnd     = Color(0xFF448AFF);
+  static const Color femaleGlowStart = Color(0xFFFF6B9D);
+  static const Color femaleGlowEnd = Color(0xFFFF3366);
+  static const Color maleGlowStart = Color(0xFF6C5CE7);
+  static const Color maleGlowEnd = Color(0xFF54A0FF);
 
-  // ===== Пара / штамп =====
-  static const Color coupleGold = Color(0xFFFFB800);
+  // ===== Пара =====
+  static const Color coupleGold = Color(0xFFFFBE0B);
   static const Color couplePink = secondary;
-  static const Color stampInk   = Color(0xFF0F0A1F);
+  static const Color stampInk = textPrimary;
 
-  // ===== Градиенты (обновлены под новый бренд) =====
+  // ===== Градиенты =====
   static const LinearGradient primaryGradient = LinearGradient(
-    colors: [Color(0xFF7C3AED), Color(0xFFEC4899)],
+    colors: [Color(0xFF6C5CE7), Color(0xFFFF6B9D)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
+  static const LinearGradient matchGradient = LinearGradient(
+    colors: [Color(0xFFFF3366), Color(0xFFFF6B9D), Color(0xFFFFBE0B)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
   static const LinearGradient heroGradient = LinearGradient(
-    colors: [Color(0xFF5B21B6), Color(0xFF7C3AED), Color(0xFFEC4899)],
+    colors: [Color(0xFF5A4BD1), Color(0xFF6C5CE7), Color(0xFFFF6B9D)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
   static const LinearGradient darkGradient = LinearGradient(
-    colors: [Color(0xFF05030A), Color(0xFF120A24), Color(0xFF1E0F3D)],
+    colors: [Color(0xFF0D0B1A), Color(0xFF1A1730), Color(0xFF252140)],
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
     stops: [0.0, 0.55, 1.0],
   );
 
   static const LinearGradient burnGradient = LinearGradient(
-    colors: [Color(0xFFEF4444), Color(0xFFEF4444)],
+    colors: [Color(0xFFFF4757), Color(0xFFFF8C42)],
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
   );
 
-  /// Старый glassGradient — для совместимости с существующими экранами.
   static LinearGradient glassGradient({double opacity = 1}) {
     return LinearGradient(
       begin: Alignment.topLeft,
@@ -109,8 +121,40 @@ class AppColors {
     );
   }
 
-  /// Современная карточка: superellipse-скругление + тонкая обводка + soft shadow.
-  /// Используется как замена `LiquidGlassCard` для новых экранов.
+  /// Мягкая карточка с тенью и скруглением.
+  static BoxDecoration softCard({
+    required BuildContext context,
+    Color? tint,
+    double radius = 20,
+    bool glow = false,
+    bool gradient = false,
+  }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final base = tint ?? (isDark ? darkSurface : surface);
+    final borderColor = isDark ? borderDark : border;
+
+    return BoxDecoration(
+      gradient: gradient ? primaryGradient : null,
+      color: gradient ? null : base,
+      borderRadius: BorderRadius.circular(radius),
+      border: gradient ? null : Border.all(color: borderColor, width: 1),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.06),
+          blurRadius: 20,
+          offset: const Offset(0, 6),
+        ),
+        if (glow)
+          BoxShadow(
+            color: match.withValues(alpha: 0.18),
+            blurRadius: 28,
+            spreadRadius: -4,
+          ),
+      ],
+    );
+  }
+
+  /// Legacy alias.
   static BoxDecoration modernCard({
     Color? tint,
     double radius = 20,
@@ -136,4 +180,22 @@ class AppColors {
       ],
     );
   }
+
+  static Color scaffoldBg(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark
+          ? darkBackground
+          : background;
+
+  static Color cardBg(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark ? darkSurface : surface;
+
+  static Color textMain(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark
+          ? textPrimaryDark
+          : textPrimary;
+
+  static Color textMuted(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark
+          ? textSecondaryDark
+          : textSecondary;
 }

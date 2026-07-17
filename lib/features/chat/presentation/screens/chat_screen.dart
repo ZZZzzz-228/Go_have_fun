@@ -80,10 +80,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        backgroundColor: AppColors.surface,
+        backgroundColor: AppColors.cardBg(context),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Пожаловаться',
-            style: TextStyle(color: AppColors.textPrimary)),
+        title: Text(
+          'Пожаловаться',
+          style: Theme.of(context).textTheme.headlineSmall,
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -125,7 +127,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
     });
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.scaffoldBg(context),
       resizeToAvoidBottomInset: true,
       body: Stack(
         children: [
@@ -204,9 +206,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
         top: 8,
       ),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: AppColors.cardBg(context),
         border: Border(
-          top: BorderSide(color: AppColors.surfaceVariant),
+          top: BorderSide(
+            color: Theme.of(context).brightness == Brightness.dark
+                ? AppColors.borderDark
+                : AppColors.border,
+          ),
         ),
       ),
       child: Row(
@@ -214,17 +220,25 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
           Expanded(
             child: TextField(
               controller: _messageCtrl,
-              style: const TextStyle(color: AppColors.textPrimary),
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    color: AppColors.textMain(context),
+                  ),
               maxLines: 4,
               minLines: 1,
               textCapitalization: TextCapitalization.sentences,
               decoration: InputDecoration(
                 hintText: 'Напиши что-нибудь...',
-                hintStyle: const TextStyle(color: AppColors.textSecondary),
+                hintStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: AppColors.textMuted(context),
+                    ),
                 filled: true,
-                fillColor: AppColors.surfaceVariant,
+                fillColor: Theme.of(context).brightness == Brightness.dark
+                    ? AppColors.darkSurfaceAlt
+                    : AppColors.surfaceAlt,
                 contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 16, vertical: 10),
+                  horizontal: 16,
+                  vertical: 10,
+                ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(20),
                   borderSide: BorderSide.none,
@@ -297,7 +311,10 @@ class _ReportOption extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      title: Text(label, style: const TextStyle(color: AppColors.textPrimary)),
+      title: Text(
+        label,
+        style: Theme.of(context).textTheme.bodyLarge,
+      ),
       onTap: onTap,
       contentPadding: EdgeInsets.zero,
     );

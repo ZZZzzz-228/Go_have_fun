@@ -1,10 +1,10 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../domain/entities/location_entity.dart';
 
-/// Маркер друга на карте — чёрный "пузырь" с именем и хвостиком-указателем,
-/// в духе референса (аватар + подпись ника над точкой)
-class MapUserMarker extends StatelessWidget {
+/// Крупный кликабельный маскот на карте с пульсацией и бейджами.
+class MapUserMarker extends StatefulWidget {
   final MapUserEntity user;
   final VoidCallback onTap;
 
@@ -15,98 +15,258 @@ class MapUserMarker extends StatelessWidget {
   });
 
   @override
+  State<MapUserMarker> createState() => _MapUserMarkerState();
+}
+
+class _MapUserMarkerState extends State<MapUserMarker>
+    with TickerProviderStateMixin {
+  late AnimationController _pulseCtrl;
+  late AnimationController _wobbleCtrl;
+  late Animation<double> _pulse;
+  late Animation<double> _wobble;
+
+  @override
+  void initState() {
+    super.initState();
+    _pulseCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1800),
+    )..repeat(reverse: true);
+    _wobbleCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2400),
+    )..repeat(reverse: true);
+
+    _pulse = Tween<double>(begin: 0.92, end: 1.08).animate(
+      CurvedAnimation(parent: _pulseCtrl, curve: Curves.easeInOut),
+    );
+    _wobble = Tween<double>(begin: -0.04, end: 0.04).animate(
+      CurvedAnimation(parent: _wobbleCtrl, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _pulseCtrl.dispose();
+    _wobbleCtrl.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final user = widget.user;
+    final gradient = user.isFemale
+        ? const LinearGradient(
+            colors: [AppColors.femaleGlowStart, AppColors.femaleGlowEnd],
+          )
+        : const LinearGradient(
+            colors: [AppColors.maleGlowStart, AppColors.maleGlowEnd],
+          );
+    final mascot = user.isFemale ? '👩' : '👨';
+
     return GestureDetector(
-      onTap: onTap,
+      onTap: widget.onTap,
       behavior: HitTestBehavior.opaque,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Мини-аватар над пузырём
-          Container(
-            width: 26,
-            height: 26,
-            decoration: BoxDecoration(
-              gradient: user.isFemale
-                  ? const LinearGradient(
-                colors: [AppColors.femaleGlowStart, AppColors.femaleGlowEnd],
-              )
-                  : const LinearGradient(
-                colors: [AppColors.maleGlowStart, AppColors.maleGlowEnd],
-              ),
-              shape: BoxShape.circle,
-              border: Border.all(color: Colors.white, width: 2),
-              boxShadow: [
-                BoxShadow(
-                  color: (user.isFemale
-                      ? AppColors.femaleGlowEnd
-                      : AppColors.maleGlowEnd)
-                      .withValues(alpha: 0.55),
-                  blurRadius: 10,
-                  spreadRadius: 1,
-                ),
-              ],
+      child: AnimatedBuilder(
+        animation: Listenable.merge([_pulse, _wobble]),
+        builder: (context, child) {
+          return Transform.rotate(
+            angle: _wobble.value,
+            child: Transform.scale(
+              scale: _pulse.value,
+              child: child,
             ),
-            child: user.avatarUrl != null
-                ? ClipOval(
-              child: Image.network(user.avatarUrl!, fit: BoxFit.cover),
-            )
-                : Center(
-              child: Text(
-                user.isFemale ? '👩' : '👨',
-                style: const TextStyle(fontSize: 13),
-              ),
-            ),
-          ),
-          // Чёрный пузырь-бейдж с именем (как на референсе)
-          Container(
-            margin: const EdgeInsets.only(top: 2),
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: const Color(0xFF190B30),
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
-              boxShadow: const [
-                BoxShadow(
-                    color: Colors.black54, blurRadius: 8, offset: Offset(0, 2)),
-              ],
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
+          );
+        },
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Stack(
+              clipBehavior: Clip.none,
               children: [
-                Text(
-                  user.name,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
+                // Пульсирующее кольцо
+                Container(
+                  width: 72,
+                  height: 72,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: AppColors.match.withValues(
+                      alpha: 0.12 * (1 - _pulseCtrl.value),
+                    ),
                   ),
                 ),
-                Text(
-                  user.beaconEmoji != null
-                      ? '${user.beaconEmoji}'
-                      : '${user.distanceMeters.round()} м',
-                  style: const TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 10,
-                    fontWeight: FontWeight.w500,
+                // Аватар-маскот
+                Positioned(
+                  left: 6,
+                  top: 6,
+                  child: Container(
+                    width: 60,
+                    height: 60,
+                    decoration: BoxDecoration(
+                      gradient: gradient,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white, width: 3),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.match.withValues(alpha: 0.35),
+                          blurRadius: 16,
+                          spreadRadius: 1,
+                        ),
+                      ],
+                    ),
+                    child: user.avatarUrl != null
+                        ? ClipOval(
+                            child: Image.network(
+                              user.avatarUrl!,
+                              fit: BoxFit.cover,
+                            ),
+                          )
+                        : Center(
+                            child: Text(
+                              mascot,
+                              style: const TextStyle(fontSize: 28),
+                            ),
+                          ),
                   ),
                 ),
+                // Бейдж батареи
+                if (user.batteryLevel != null)
+                  Positioned(
+                    right: -2,
+                    top: -2,
+                    child: _Badge(
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            _batteryIcon(user.batteryLevel!),
+                            size: 10,
+                            color: _batteryColor(user.batteryLevel!),
+                          ),
+                          const SizedBox(width: 2),
+                          Text(
+                            '${user.batteryLevel}%',
+                            style: const TextStyle(
+                              fontSize: 9,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                // Стрелка направления
+                if (user.headingDegrees != null)
+                  Positioned(
+                    left: -4,
+                    bottom: 8,
+                    child: Transform.rotate(
+                      angle: user.headingDegrees! * math.pi / 180,
+                      child: Container(
+                        width: 22,
+                        height: 22,
+                        decoration: BoxDecoration(
+                          color: AppColors.surface,
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.15),
+                              blurRadius: 6,
+                            ),
+                          ],
+                        ),
+                        child: const Icon(
+                          Icons.navigation_rounded,
+                          size: 14,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ),
+                  ),
               ],
             ),
-          ),
-          // Хвостик пузыря — маленький ромб, "указывающий" на точку на карте
-          Transform.rotate(
-            angle: 0.785398, // 45°
-            child: Container(
-              width: 8,
-              height: 8,
-              margin: const EdgeInsets.only(top: -4),
-              decoration: const BoxDecoration(color: Color(0xFF190B30)),
+            const SizedBox(height: 4),
+            // Имя + статус
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? AppColors.darkSurface.withValues(alpha: 0.92)
+                    : AppColors.surface.withValues(alpha: 0.95),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: AppColors.primary.withValues(alpha: 0.25),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.12),
+                    blurRadius: 10,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
+              ),
+              child: Column(
+                children: [
+                  Text(
+                    user.name,
+                    style: TextStyle(
+                      color: AppColors.textMain(context),
+                      fontSize: 13,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  Text(
+                    user.beaconEmoji ?? '${user.distanceMeters.round()} м',
+                    style: TextStyle(
+                      color: AppColors.textMuted(context),
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  IconData _batteryIcon(int level) {
+    if (level > 80) return Icons.battery_full_rounded;
+    if (level > 50) return Icons.battery_5_bar_rounded;
+    if (level > 20) return Icons.battery_3_bar_rounded;
+    return Icons.battery_alert_rounded;
+  }
+
+  Color _batteryColor(int level) {
+    if (level > 50) return AppColors.success;
+    if (level > 20) return AppColors.warning;
+    return AppColors.error;
+  }
+}
+
+class _Badge extends StatelessWidget {
+  final Widget child;
+  const _Badge({required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 3),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: AppColors.border),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 6,
           ),
         ],
       ),
+      child: child,
     );
   }
 }

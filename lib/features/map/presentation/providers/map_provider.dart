@@ -375,6 +375,8 @@ class MapNotifier extends StateNotifier<MapState> {
         fuzzedLongitude: center.longitude + lonOff,
         distanceMeters: 20 + rnd.nextDouble() * 80,
         lastSeen: DateTime.now(),
+        batteryLevel: 15 + rnd.nextInt(85),
+        headingDegrees: rnd.nextDouble() * 360,
       ));
     }
     return users;

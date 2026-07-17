@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/router/route_names.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../shared/widgets/liquid_glass.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
@@ -24,21 +23,20 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1500),
+      duration: const Duration(milliseconds: 1200),
     );
-    _scaleAnim = Tween<double>(
-      begin: 0.6,
-      end: 1.0,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.elasticOut));
+    _scaleAnim = Tween<double>(begin: 0.85, end: 1.0).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),
+    );
     _fadeAnim = Tween<double>(begin: 0, end: 1).animate(
-      CurvedAnimation(parent: _controller, curve: const Interval(0, 0.5)),
+      CurvedAnimation(parent: _controller, curve: const Interval(0, 0.6)),
     );
     _controller.forward();
     _navigate();
   }
 
   Future<void> _navigate() async {
-    await Future.delayed(const Duration(milliseconds: 2200));
+    await Future.delayed(const Duration(milliseconds: 2000));
     if (!mounted) return;
 
     final prefs = await SharedPreferences.getInstance();
@@ -65,63 +63,66 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
-      body: AppGradientBackground(
-        child: Center(
-          child: AnimatedBuilder(
-            animation: _controller,
-            builder: (context, child) {
-              return Opacity(
-                opacity: _fadeAnim.value,
-                child: Transform.scale(scale: _scaleAnim.value, child: child),
-              );
-            },
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // Лого — жидкое стекло
-                LiquidGlassCard(
-                  borderRadius: 32,
-                  padding: const EdgeInsets.all(28),
-                  showGlow: true,
-                  child: const Text('✨', style: TextStyle(fontSize: 56)),
-                ),
-                const SizedBox(height: 24),
-                ShaderMask(
-                  shaderCallback: (bounds) =>
-                      AppColors.primaryGradient.createShader(bounds),
-                  child: const Text(
-                    'Go Have Fun',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 32,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: -0.5,
+      backgroundColor: AppColors.scaffoldBg(context),
+      body: Center(
+        child: AnimatedBuilder(
+          animation: _controller,
+          builder: (context, child) {
+            return Opacity(
+              opacity: _fadeAnim.value,
+              child: Transform.scale(scale: _scaleAnim.value, child: child),
+            );
+          },
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: 88,
+                height: 88,
+                decoration: BoxDecoration(
+                  gradient: AppColors.primaryGradient,
+                  borderRadius: BorderRadius.circular(28),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.primary.withValues(alpha: 0.3),
+                      blurRadius: 24,
+                      offset: const Offset(0, 8),
                     ),
-                  ),
+                  ],
                 ),
-                const SizedBox(height: 8),
-                const Text(
-                  'Знакомства в реальной жизни',
-                  style: TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w400,
-                  ),
+                child: const Center(
+                  child: Text('✨', style: TextStyle(fontSize: 44)),
                 ),
-                const SizedBox(height: 60),
-                SizedBox(
-                  width: 32,
-                  height: 32,
-                  child: CircularProgressIndicator(
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                      AppColors.primary,
+              ),
+              const SizedBox(height: 24),
+              ShaderMask(
+                shaderCallback: (bounds) =>
+                    AppColors.primaryGradient.createShader(bounds),
+                child: Text(
+                  'Go Have Fun',
+                  style: Theme.of(context).textTheme.displayMedium?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w800,
+                      ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Знакомства в реальной жизни',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: AppColors.textMuted(context),
                     ),
-                    strokeWidth: 2.5,
-                  ),
+              ),
+              const SizedBox(height: 48),
+              const SizedBox(
+                width: 28,
+                height: 28,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2.5,
+                  color: AppColors.primary,
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),

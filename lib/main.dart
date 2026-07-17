@@ -7,6 +7,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'firebase_options.dart';
+import 'shared/providers/theme_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -16,14 +17,10 @@ void main() async {
     DeviceOrientation.portraitDown,
   ]);
 
-  // Светлый content-first -> тёмные иконки статус-бара
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
-      statusBarIconBrightness: Brightness.dark,
-      statusBarBrightness: Brightness.light,
       systemNavigationBarColor: Colors.transparent,
-      systemNavigationBarIconBrightness: Brightness.dark,
     ),
   );
 
@@ -47,13 +44,14 @@ class GoHaveFunApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(appRouterProvider);
+    final themeMode = ref.watch(themeModeProvider);
 
     return MaterialApp.router(
       title: 'Go Have Fun',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
-      themeMode: ThemeMode.light, // светлая content-first тема по ТЗ
+      themeMode: themeMode,
       locale: const Locale('ru', 'RU'),
       supportedLocales: const [Locale('ru', 'RU')],
       localizationsDelegates: const [
@@ -62,6 +60,21 @@ class GoHaveFunApp extends ConsumerWidget {
         GlobalCupertinoLocalizations.delegate,
       ],
       routerConfig: router,
+      builder: (context, child) {
+        final isDark = Theme.of(context).brightness == Brightness.dark;
+        SystemChrome.setSystemUIOverlayStyle(
+          SystemUiOverlayStyle(
+            statusBarColor: Colors.transparent,
+            statusBarIconBrightness:
+                isDark ? Brightness.light : Brightness.dark,
+            statusBarBrightness: isDark ? Brightness.dark : Brightness.light,
+            systemNavigationBarColor: Colors.transparent,
+            systemNavigationBarIconBrightness:
+                isDark ? Brightness.light : Brightness.dark,
+          ),
+        );
+        return child ?? const SizedBox.shrink();
+      },
     );
   }
 }

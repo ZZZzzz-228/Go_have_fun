@@ -41,6 +41,8 @@ class MapUserEntity extends Equatable {
 
   final double distanceMeters;
   final DateTime lastSeen;
+  final int? batteryLevel;
+  final double? headingDegrees;
 
   const MapUserEntity({
     required this.userId,
@@ -54,6 +56,8 @@ class MapUserEntity extends Equatable {
     required this.fuzzedLongitude,
     required this.distanceMeters,
     required this.lastSeen,
+    this.batteryLevel,
+    this.headingDegrees,
   });
 
   LatLng get latLng => LatLng(fuzzedLatitude, fuzzedLongitude);
@@ -79,5 +83,7 @@ class MapUserEntity extends Equatable {
         fuzzedLongitude,
         distanceMeters,
         lastSeen,
+        batteryLevel,
+        headingDegrees,
       ];
 }

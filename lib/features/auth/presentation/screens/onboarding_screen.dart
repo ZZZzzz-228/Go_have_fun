@@ -3,7 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/router/route_names.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../shared/widgets/liquid_glass.dart';
+import '../../../../shared/widgets/app_ui.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -16,33 +16,33 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   final _pageController = PageController();
   int _currentPage = 0;
 
-  final List<_OnboardPage> _pages = [
+  final List<_OnboardPage> _pages = const [
     _OnboardPage(
       emoji: '📍',
       title: 'Знакомься вживую',
       subtitle:
-      'Видь людей на карте в радиусе 100 метров. Реальные встречи, реальные эмоции.',
+          'Видь людей на карте в радиусе 100 метров. Реальные встречи, реальные эмоции.',
       color: AppColors.primary,
     ),
     _OnboardPage(
       emoji: '⏱️',
       title: '15 минут — твоё время',
       subtitle:
-      'Чат горит. Успей познакомиться, пока таймер не истёк. Адреналин и живость гарантированы.',
+          'Чат горит. Успей познакомиться, пока таймер не истёк.',
       color: AppColors.secondary,
     ),
     _OnboardPage(
       emoji: '🔒',
       title: 'Твоя безопасность',
       subtitle:
-      'Точные координаты скрыты. Кнопка паники. Жёсткая модерация. Мы заботимся о тебе.',
-      color: AppColors.tertiary,
+          'Точные координаты скрыты. Кнопка паники. Мы заботимся о тебе.',
+      color: AppColors.match,
     ),
     _OnboardPage(
       emoji: '💑',
       title: 'Штамп в паспорте',
       subtitle:
-      'Нашёл свою пару — получите совместный штамп. Считайте дни вместе прямо в приложении.',
+          'Нашёл свою пару — получите совместный штамп и считайте дни вместе.',
       color: AppColors.coupleGold,
     ),
   ];
@@ -73,77 +73,60 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
-      body: AppGradientBackground(
-        child: SafeArea(
-          child: Column(
-            children: [
-              // Пропустить
-              Align(
-                alignment: Alignment.topRight,
-                child: Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: GestureDetector(
-                    onTap: _finish,
-                    child: const Text(
-                      'Пропустить',
-                      style: TextStyle(
-                        color: AppColors.textSecondary,
-                        fontSize: 15,
+      backgroundColor: AppColors.scaffoldBg(context),
+      body: SafeArea(
+        child: Column(
+          children: [
+            Align(
+              alignment: Alignment.topRight,
+              child: TextButton(
+                onPressed: _finish,
+                child: Text(
+                  'Пропустить',
+                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                        color: AppColors.textMuted(context),
                       ),
-                    ),
+                ),
+              ),
+            ),
+            Expanded(
+              child: PageView.builder(
+                controller: _pageController,
+                itemCount: _pages.length,
+                onPageChanged: (i) => setState(() => _currentPage = i),
+                itemBuilder: (context, i) => _OnboardingPage(page: _pages[i]),
+              ),
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List.generate(
+                _pages.length,
+                (i) => AnimatedContainer(
+                  duration: const Duration(milliseconds: 300),
+                  margin: const EdgeInsets.symmetric(horizontal: 4),
+                  width: _currentPage == i ? 24 : 8,
+                  height: 8,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(4),
+                    color: _currentPage == i
+                        ? _pages[_currentPage].color
+                        : AppColors.primary.withValues(alpha: 0.15),
                   ),
                 ),
               ),
-
-              // Страницы
-              Expanded(
-                child: PageView.builder(
-                  controller: _pageController,
-                  itemCount: _pages.length,
-                  onPageChanged: (i) => setState(() => _currentPage = i),
-                  itemBuilder: (context, i) {
-                    final page = _pages[i];
-                    return _OnboardingPage(page: page);
-                  },
-                ),
+            ),
+            const SizedBox(height: 28),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: AppButton(
+                label: _currentPage < _pages.length - 1
+                    ? 'Дальше'
+                    : 'Поехали! 🚀',
+                onTap: _nextPage,
               ),
-
-              // Индикаторы
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(
-                  _pages.length,
-                      (i) => AnimatedContainer(
-                    duration: const Duration(milliseconds: 300),
-                    margin: const EdgeInsets.symmetric(horizontal: 4),
-                    width: _currentPage == i ? 24 : 8,
-                    height: 8,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(4),
-                      color: _currentPage == i
-                          ? _pages[_currentPage].color
-                          : AppColors.surfaceVariant,
-                    ),
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 32),
-
-              // Кнопка
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: LiquidGlassButton(
-                  label: _currentPage < _pages.length - 1
-                      ? 'Дальше'
-                      : 'Поехали! 🚀',
-                  onTap: _nextPage,
-                ),
-              ),
-              const SizedBox(height: 32),
-            ],
-          ),
+            ),
+            const SizedBox(height: 28),
+          ],
         ),
       ),
     );
@@ -161,32 +144,34 @@ class _OnboardingPage extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          LiquidGlassCard(
-            borderRadius: 70,
-            padding: const EdgeInsets.all(38),
-            tint: page.color,
-            showGlow: true,
-            child: Text(page.emoji, style: const TextStyle(fontSize: 64)),
+          Container(
+            width: 120,
+            height: 120,
+            decoration: BoxDecoration(
+              color: page.color.withValues(alpha: 0.12),
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: page.color.withValues(alpha: 0.25),
+                width: 2,
+              ),
+            ),
+            child: Center(
+              child: Text(page.emoji, style: const TextStyle(fontSize: 52)),
+            ),
           ),
           const SizedBox(height: 40),
           Text(
             page.title,
-            style: const TextStyle(
-              color: AppColors.textPrimary,
-              fontSize: 28,
-              fontWeight: FontWeight.w800,
-              letterSpacing: -0.5,
-            ),
+            style: Theme.of(context).textTheme.displaySmall,
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 16),
           Text(
             page.subtitle,
-            style: const TextStyle(
-              color: AppColors.textSecondary,
-              fontSize: 16,
-              height: 1.6,
-            ),
+            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                  color: AppColors.textMuted(context),
+                  height: 1.55,
+                ),
             textAlign: TextAlign.center,
           ),
         ],

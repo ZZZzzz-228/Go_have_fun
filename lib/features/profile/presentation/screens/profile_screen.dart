@@ -1,18 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/router/route_names.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/time_utils.dart';
+import '../../../../shared/providers/theme_provider.dart';
 import '../widgets/beacon_selector.dart';
 
-class ProfileScreen extends StatefulWidget {
+class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
 
   @override
-  State<ProfileScreen> createState() => _ProfileScreenState();
+  ConsumerState<ProfileScreen> createState() => _ProfileScreenState();
 }
 
-class _ProfileScreenState extends State<ProfileScreen> {
+class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   final String _name = 'Алекс';
   final int _age = 24;
   final String _bio = 'Люблю кофе, велопрогулки и случайные встречи';
@@ -30,7 +32,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         DateTime.now().difference(_joinedAt).inDays;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.scaffoldBg(context),
       body: SafeArea(
         bottom: false,
         child: ListView(
@@ -259,9 +261,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   void _showSettingsSheet() {
+    final themeMode = ref.read(themeModeProvider);
+    final isDark = themeMode == ThemeMode.dark ||
+        (themeMode == ThemeMode.system &&
+            MediaQuery.platformBrightnessOf(context) == Brightness.dark);
+
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppColors.surface,
+      backgroundColor: AppColors.cardBg(context),
       isScrollControlled: false,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
@@ -290,6 +297,44 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 style: Theme.of(context).textTheme.titleLarge,
               ),
               const SizedBox(height: 16),
+              _ModernCard(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Icon(
+                        isDark ? Icons.dark_mode_rounded : Icons.light_mode_rounded,
+                        color: AppColors.primary,
+                        size: 20,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Тёмная тема',
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                              fontWeight: FontWeight.w500,
+                            ),
+                      ),
+                    ),
+                    Switch.adaptive(
+                      value: isDark,
+                      activeTrackColor: AppColors.primary,
+                      onChanged: (_) {
+                        ref.read(themeModeProvider.notifier).toggle();
+                        Navigator.pop(context);
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 8),
               _SettingsRow(
                 icon: Icons.tune_rounded,
                 label: 'Основные',
@@ -360,8 +405,11 @@ class _ModernCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final borderColor = isDark ? AppColors.borderDark : AppColors.border;
+
     return Material(
-      color: AppColors.surface,
+      color: AppColors.cardBg(context),
       borderRadius: BorderRadius.circular(20),
       child: InkWell(
         onTap: onTap,
@@ -370,15 +418,15 @@ class _ModernCard extends StatelessWidget {
           padding: padding,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: AppColors.border, width: 1),
+            border: Border.all(color: borderColor, width: 1),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.04),
+                color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.04),
                 blurRadius: 14,
                 offset: const Offset(0, 4),
               ),
             ],
-            color: tint ?? AppColors.surface,
+            color: tint ?? AppColors.cardBg(context),
           ),
           child: child,
         ),

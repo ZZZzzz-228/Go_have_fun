@@ -9,6 +9,8 @@ class AuthTextField extends StatelessWidget {
   final Widget? suffixIcon;
   final TextInputType keyboardType;
   final bool obscureText;
+  final int? maxLines;
+  final int? maxLength;
   final String? Function(String?)? validator;
 
   const AuthTextField({
@@ -20,6 +22,8 @@ class AuthTextField extends StatelessWidget {
     this.suffixIcon,
     this.keyboardType = TextInputType.text,
     this.obscureText = false,
+    this.maxLines = 1,
+    this.maxLength,
     this.validator,
   });
 
@@ -30,22 +34,28 @@ class AuthTextField extends StatelessWidget {
       children: [
         Text(
           label,
-          style: const TextStyle(
-            color: AppColors.textSecondary,
-            fontSize: 13,
-            fontWeight: FontWeight.w500,
-          ),
+          style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                color: AppColors.textMuted(context),
+              ),
         ),
         const SizedBox(height: 8),
         TextFormField(
           controller: controller,
           keyboardType: keyboardType,
           obscureText: obscureText,
-          style: const TextStyle(color: AppColors.textPrimary, fontSize: 16),
+          maxLines: maxLines,
+          maxLength: maxLength,
+          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                color: AppColors.textMain(context),
+              ),
           validator: validator,
           decoration: InputDecoration(
             hintText: hint,
-            prefixIcon: Icon(prefixIcon, color: AppColors.textSecondary, size: 20),
+            prefixIcon: Icon(
+              prefixIcon,
+              color: AppColors.textMuted(context),
+              size: 20,
+            ),
             suffixIcon: suffixIcon,
           ),
         ),

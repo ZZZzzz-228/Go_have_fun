@@ -1,107 +1,110 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'app_colors.dart';
 
-/// Типографика под content-first: крупные заголовки, чистая иерархия,
-/// хорошая читаемость. Без Gilroy (шрифта нет в проекте) — системный.
+/// Современный гротеск: крупные заголовки, высокий межстрочный, минимум мелкого текста.
 class AppTextStyles {
   AppTextStyles._();
 
-  static TextTheme get lightTextTheme => const TextTheme(
-    // Крупные заголовки — акцент по ТЗ
-    displayLarge: TextStyle(
-      fontSize: 34,
-      fontWeight: FontWeight.w800,
-      color: AppColors.textPrimary,
-      letterSpacing: -0.6,
-      height: 1.15,
-    ),
-    displayMedium: TextStyle(
-      fontSize: 28,
-      fontWeight: FontWeight.w700,
-      color: AppColors.textPrimary,
-      letterSpacing: -0.4,
-      height: 1.2,
-    ),
-    displaySmall: TextStyle(
-      fontSize: 24,
-      fontWeight: FontWeight.w700,
-      color: AppColors.textPrimary,
-      height: 1.25,
-    ),
-    headlineLarge: TextStyle(
-      fontSize: 22,
-      fontWeight: FontWeight.w700,
-      color: AppColors.textPrimary,
-      height: 1.3,
-    ),
-    headlineMedium: TextStyle(
-      fontSize: 20,
-      fontWeight: FontWeight.w600,
-      color: AppColors.textPrimary,
-      height: 1.3,
-    ),
-    headlineSmall: TextStyle(
-      fontSize: 18,
-      fontWeight: FontWeight.w600,
-      color: AppColors.textPrimary,
-      height: 1.3,
-    ),
-    // Секции / подзаголовки
-    titleLarge: TextStyle(
-      fontSize: 17,
-      fontWeight: FontWeight.w600,
-      color: AppColors.textPrimary,
-    ),
-    titleMedium: TextStyle(
-      fontSize: 15,
-      fontWeight: FontWeight.w600,
-      color: AppColors.textPrimary,
-    ),
-    titleSmall: TextStyle(
-      fontSize: 13,
-      fontWeight: FontWeight.w500,
-      color: AppColors.textSecondary,
-    ),
-    // Тело
-    bodyLarge: TextStyle(
-      fontSize: 16,
-      fontWeight: FontWeight.w400,
-      color: AppColors.textPrimary,
-      height: 1.5,
-    ),
-    bodyMedium: TextStyle(
-      fontSize: 14,
-      fontWeight: FontWeight.w400,
-      color: AppColors.textPrimary,
-      height: 1.45,
-    ),
-    bodySmall: TextStyle(
-      fontSize: 12,
-      fontWeight: FontWeight.w400,
-      color: AppColors.textSecondary,
-      height: 1.3,
-    ),
-    // Метки
-    labelLarge: TextStyle(
-      fontSize: 15,
-      fontWeight: FontWeight.w600,
-      color: AppColors.textPrimary,
-      letterSpacing: 0.2,
-    ),
-    labelMedium: TextStyle(
-      fontSize: 13,
-      fontWeight: FontWeight.w500,
-      color: AppColors.textSecondary,
-    ),
-    labelSmall: TextStyle(
-      fontSize: 11,
-      fontWeight: FontWeight.w500,
-      color: AppColors.textSecondary,
-      letterSpacing: 0.4,
-    ),
-  );
+  static TextTheme _build({required Color primary, required Color secondary}) {
+    final base = GoogleFonts.plusJakartaSansTextTheme();
+    return base.copyWith(
+      displayLarge: GoogleFonts.plusJakartaSans(
+        fontSize: 36,
+        fontWeight: FontWeight.w800,
+        color: primary,
+        letterSpacing: -0.8,
+        height: 1.12,
+      ),
+      displayMedium: GoogleFonts.plusJakartaSans(
+        fontSize: 30,
+        fontWeight: FontWeight.w800,
+        color: primary,
+        letterSpacing: -0.5,
+        height: 1.15,
+      ),
+      displaySmall: GoogleFonts.plusJakartaSans(
+        fontSize: 26,
+        fontWeight: FontWeight.w700,
+        color: primary,
+        height: 1.2,
+      ),
+      headlineLarge: GoogleFonts.plusJakartaSans(
+        fontSize: 24,
+        fontWeight: FontWeight.w700,
+        color: primary,
+        height: 1.25,
+      ),
+      headlineMedium: GoogleFonts.plusJakartaSans(
+        fontSize: 20,
+        fontWeight: FontWeight.w700,
+        color: primary,
+        height: 1.3,
+      ),
+      headlineSmall: GoogleFonts.plusJakartaSans(
+        fontSize: 18,
+        fontWeight: FontWeight.w600,
+        color: primary,
+        height: 1.35,
+      ),
+      titleLarge: GoogleFonts.plusJakartaSans(
+        fontSize: 17,
+        fontWeight: FontWeight.w700,
+        color: primary,
+      ),
+      titleMedium: GoogleFonts.plusJakartaSans(
+        fontSize: 15,
+        fontWeight: FontWeight.w600,
+        color: primary,
+      ),
+      titleSmall: GoogleFonts.plusJakartaSans(
+        fontSize: 13,
+        fontWeight: FontWeight.w600,
+        color: secondary,
+      ),
+      bodyLarge: GoogleFonts.plusJakartaSans(
+        fontSize: 16,
+        fontWeight: FontWeight.w400,
+        color: primary,
+        height: 1.55,
+      ),
+      bodyMedium: GoogleFonts.plusJakartaSans(
+        fontSize: 14,
+        fontWeight: FontWeight.w400,
+        color: primary,
+        height: 1.5,
+      ),
+      bodySmall: GoogleFonts.plusJakartaSans(
+        fontSize: 12,
+        fontWeight: FontWeight.w400,
+        color: secondary,
+        height: 1.4,
+      ),
+      labelLarge: GoogleFonts.plusJakartaSans(
+        fontSize: 15,
+        fontWeight: FontWeight.w700,
+        color: primary,
+        letterSpacing: 0.2,
+      ),
+      labelMedium: GoogleFonts.plusJakartaSans(
+        fontSize: 13,
+        fontWeight: FontWeight.w600,
+        color: secondary,
+      ),
+      labelSmall: GoogleFonts.plusJakartaSans(
+        fontSize: 11,
+        fontWeight: FontWeight.w600,
+        color: secondary,
+        letterSpacing: 0.3,
+      ),
+    );
+  }
 
-  /// Тёмная типографика — на случай если пользователь включит darkTheme.
-  static TextTheme get darkTextTheme =>
-      lightTextTheme.apply(bodyColor: Colors.white, displayColor: Colors.white);
+  static TextTheme get lightTextTheme =>
+      _build(primary: AppColors.textPrimary, secondary: AppColors.textSecondary);
+
+  static TextTheme get darkTextTheme => _build(
+        primary: AppColors.textPrimaryDark,
+        secondary: AppColors.textSecondaryDark,
+      );
 }

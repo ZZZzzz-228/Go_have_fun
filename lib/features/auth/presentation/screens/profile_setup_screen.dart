@@ -4,7 +4,8 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../../core/router/route_names.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../shared/widgets/liquid_glass.dart';
+import '../../../../shared/widgets/app_ui.dart';
+import '../widgets/auth_text_field.dart';
 
 class ProfileSetupScreen extends StatefulWidget {
   const ProfileSetupScreen({super.key});
@@ -17,11 +18,14 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
   final _bioCtrl = TextEditingController();
   final List<File?> _photos = List.filled(6, null);
   bool _isLoading = false;
-  int _step = 0; // 0 — фото, 1 — о себе
+  int _step = 0;
 
   Future<void> _pickPhoto(int index) async {
     final picker = ImagePicker();
-    final file = await picker.pickImage(source: ImageSource.gallery, imageQuality: 80);
+    final file = await picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 80,
+    );
     if (file != null) {
       setState(() => _photos[index] = File(file.path));
     }
@@ -29,7 +33,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
 
   Future<void> _finish() async {
     setState(() => _isLoading = true);
-    await Future.delayed(const Duration(seconds: 1)); // TODO: upload & save
+    await Future.delayed(const Duration(seconds: 1));
     if (mounted) {
       setState(() => _isLoading = false);
       context.go(RouteNames.map);
@@ -45,17 +49,16 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
-      body: AppGradientBackground(
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Прогресс
-                Row(
-                  children: List.generate(2, (i) => Expanded(
+      backgroundColor: AppColors.scaffoldBg(context),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                children: List.generate(2, (i) {
+                  return Expanded(
                     child: Container(
                       height: 4,
                       margin: EdgeInsets.only(right: i == 0 ? 8 : 0),
@@ -63,34 +66,30 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                         borderRadius: BorderRadius.circular(2),
                         gradient: i <= _step
                             ? AppColors.primaryGradient
-                            : LinearGradient(colors: [
-                          Colors.white.withValues(alpha: 0.12),
-                          Colors.white.withValues(alpha: 0.12),
-                        ]),
+                            : null,
+                        color: i <= _step
+                            ? null
+                            : AppColors.primary.withValues(alpha: 0.12),
                       ),
                     ),
-                  )),
-                ),
-                const SizedBox(height: 32),
-
-                if (_step == 0) _buildPhotoStep(),
-                if (_step == 1) _buildBioStep(),
-
-                const Spacer(),
-
-                LiquidGlassButton(
-                  label: _step == 0 ? 'Дальше' : 'Начать знакомства!',
-                  isLoading: _isLoading,
-                  onTap: () {
-                    if (_step == 0) {
-                      setState(() => _step = 1);
-                    } else {
-                      _finish();
-                    }
-                  },
-                ),
-              ],
-            ),
+                  );
+                }),
+              ),
+              const SizedBox(height: 32),
+              if (_step == 0) Expanded(child: _buildPhotoStep()),
+              if (_step == 1) Expanded(child: _buildBioStep()),
+              AppButton(
+                label: _step == 0 ? 'Дальше' : 'Начать знакомства!',
+                isLoading: _isLoading,
+                onTap: () {
+                  if (_step == 0) {
+                    setState(() => _step = 1);
+                  } else {
+                    _finish();
+                  }
+                },
+              ),
+            ],
           ),
         ),
       ),
@@ -98,96 +97,92 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
   }
 
   Widget _buildPhotoStep() {
-    return Expanded(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Добавь фото 📸',
-            style: TextStyle(
-              color: AppColors.textPrimary,
-              fontSize: 26,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-          const SizedBox(height: 8),
-          const Text(
-            'Первое впечатление важно.\nДобавь хотя бы одно.',
-            style: TextStyle(color: AppColors.textSecondary, fontSize: 15),
-          ),
-          const SizedBox(height: 24),
-          Expanded(
-            child: GridView.builder(
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 3,
-                crossAxisSpacing: 10,
-                mainAxisSpacing: 10,
-                childAspectRatio: 0.75,
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final borderColor = isDark ? AppColors.borderDark : AppColors.border;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Добавь фото',
+          style: Theme.of(context).textTheme.displaySmall,
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'Первое впечатление важно. Добавь хотя бы одно.',
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: AppColors.textMuted(context),
               ),
-              itemCount: 6,
-              itemBuilder: (context, i) {
-                final photo = _photos[i];
-                return GestureDetector(
-                  onTap: () => _pickPhoto(i),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(16),
-                      color: Colors.white.withValues(alpha: 0.05),
-                      border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.12)),
-                      image: photo != null
-                          ? DecorationImage(
-                        image: FileImage(photo),
-                        fit: BoxFit.cover,
-                      )
-                          : null,
-                    ),
-                    child: photo == null
-                        ? const Center(
-                      child: Icon(
-                        Icons.add_rounded,
-                        color: AppColors.textSecondary,
-                        size: 32,
-                      ),
-                    )
+        ),
+        const SizedBox(height: 24),
+        Expanded(
+          child: GridView.builder(
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 3,
+              crossAxisSpacing: 10,
+              mainAxisSpacing: 10,
+              childAspectRatio: 0.75,
+            ),
+            itemCount: 6,
+            itemBuilder: (context, i) {
+              final photo = _photos[i];
+              return GestureDetector(
+                onTap: () => _pickPhoto(i),
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(18),
+                    color: AppColors.cardBg(context),
+                    border: Border.all(color: borderColor),
+                    image: photo != null
+                        ? DecorationImage(
+                            image: FileImage(photo),
+                            fit: BoxFit.cover,
+                          )
                         : null,
                   ),
-                );
-              },
-            ),
+                  child: photo == null
+                      ? Icon(
+                          Icons.add_rounded,
+                          color: AppColors.textMuted(context),
+                          size: 28,
+                        )
+                      : null,
+                ),
+              );
+            },
           ),
-        ],
-      ),
+        ),
+        const SizedBox(height: 16),
+      ],
     );
   }
 
   Widget _buildBioStep() {
-    return Expanded(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Расскажи о себе ✍️',
-            style: TextStyle(
-              color: AppColors.textPrimary,
-              fontSize: 26,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-          const SizedBox(height: 8),
-          const Text(
-            'Пару слов — и ты станешь интереснее',
-            style: TextStyle(color: AppColors.textSecondary, fontSize: 15),
-          ),
-          const SizedBox(height: 24),
-          LiquidGlassTextField(
-            controller: _bioCtrl,
-            maxLength: 300,
-            maxLines: 6,
-            hint: 'Люблю кофе, велосипед и случайные встречи...',
-          ),
-        ],
-      ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Расскажи о себе',
+          style: Theme.of(context).textTheme.displaySmall,
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'Пару слов — и ты станешь интереснее',
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: AppColors.textMuted(context),
+              ),
+        ),
+        const SizedBox(height: 24),
+        AuthTextField(
+          controller: _bioCtrl,
+          label: 'О себе',
+          hint: 'Люблю кофе, велосипед и случайные встречи...',
+          prefixIcon: Icons.edit_outlined,
+          maxLines: 5,
+          maxLength: 300,
+        ),
+        const Spacer(),
+      ],
     );
   }
 }

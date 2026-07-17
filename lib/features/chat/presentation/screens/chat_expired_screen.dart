@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/router/route_names.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../shared/widgets/app_ui.dart';
 
 class ChatExpiredScreen extends StatefulWidget {
   const ChatExpiredScreen({super.key});
@@ -22,8 +23,6 @@ class _ChatExpiredScreenState extends State<ChatExpiredScreen>
   @override
   void initState() {
     super.initState();
-
-    // Вибрация
     HapticFeedback.heavyImpact();
 
     _entryController = AnimationController(
@@ -36,8 +35,7 @@ class _ChatExpiredScreenState extends State<ChatExpiredScreen>
     )..repeat(reverse: true);
 
     _scaleAnim = Tween<double>(begin: 0.3, end: 1.0).animate(
-      CurvedAnimation(
-          parent: _entryController, curve: Curves.elasticOut),
+      CurvedAnimation(parent: _entryController, curve: Curves.elasticOut),
     );
     _fadeAnim = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _entryController, curve: Curves.easeIn),
@@ -48,7 +46,6 @@ class _ChatExpiredScreenState extends State<ChatExpiredScreen>
 
     _entryController.forward();
 
-    // Через 5 секунд вернуться на карту
     Future.delayed(const Duration(seconds: 8), () {
       if (mounted) context.go(RouteNames.map);
     });
@@ -64,13 +61,12 @@ class _ChatExpiredScreenState extends State<ChatExpiredScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.scaffoldBg(context),
       body: AnimatedBuilder(
         animation: Listenable.merge([_entryController, _pulseController]),
         builder: (context, child) {
           return Stack(
             children: [
-              // Фоновые угли
               Positioned.fill(
                 child: Container(
                   decoration: BoxDecoration(
@@ -78,15 +74,14 @@ class _ChatExpiredScreenState extends State<ChatExpiredScreen>
                       center: Alignment.center,
                       radius: 1.2,
                       colors: [
-                        AppColors.timerRed.withValues(alpha: 0.35 * _fadeAnim.value),
-                        AppColors.background,
+                        AppColors.timerRed
+                            .withValues(alpha: 0.25 * _fadeAnim.value),
+                        AppColors.scaffoldBg(context),
                       ],
                     ),
                   ),
                 ),
               ),
-
-              // Центральный блок
               Center(
                 child: Opacity(
                   opacity: _fadeAnim.value,
@@ -97,80 +92,49 @@ class _ChatExpiredScreenState extends State<ChatExpiredScreen>
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          // Огонь
                           Transform.scale(
                             scale: _pulseAnim.value,
                             child: const Text(
                               '🔥',
-                              style: TextStyle(fontSize: 96),
+                              style: TextStyle(fontSize: 88),
                             ),
                           ),
-                          const SizedBox(height: 32),
-
-                          // Главный текст
+                          const SizedBox(height: 28),
                           ShaderMask(
                             shaderCallback: (bounds) =>
-                                AppColors.primaryGradient
-                                    .createShader(bounds),
-                            child: const Text(
+                                AppColors.primaryGradient.createShader(bounds),
+                            child: Text(
                               'ГУЛЯЙ!',
-                              style: TextStyle(
-                                fontSize: 64,
-                                fontWeight: FontWeight.w900,
-                                color: Colors.white,
-                                letterSpacing: 2,
-                              ),
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .displayLarge
+                                  ?.copyWith(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w900,
+                                    letterSpacing: 2,
+                                  ),
                             ),
                           ),
                           const SizedBox(height: 16),
-
-                          const Text(
+                          Text(
                             'Время вышло. Этот момент был настоящим 💫',
-                            style: TextStyle(
-                              color: AppColors.textSecondary,
-                              fontSize: 17,
-                              height: 1.5,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(height: 12),
-                          const Text(
-                            'Вы больше не видите друг друга на карте',
-                            style: TextStyle(
-                              color: AppColors.textDisabled,
-                              fontSize: 14,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(height: 48),
-
-                          // Кнопка
-                          GestureDetector(
-                            onTap: () => context.go(RouteNames.map),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 40, vertical: 16),
-                              decoration: BoxDecoration(
-                                gradient: AppColors.primaryGradient,
-                                borderRadius: BorderRadius.circular(20),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: AppColors.primary
-                                        .withValues(alpha: 0.4),
-                                    blurRadius: 24,
-                                    offset: const Offset(0, 8),
-                                  ),
-                                ],
-                              ),
-                              child: const Text(
-                                'Ещё раз! 🚀',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w700,
+                            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                  color: AppColors.textMuted(context),
+                                  height: 1.5,
                                 ),
-                              ),
-                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Вы больше не видите друг друга на карте',
+                            style: Theme.of(context).textTheme.bodySmall,
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 40),
+                          AppButton(
+                            label: 'Ещё раз! 🚀',
+                            expanded: false,
+                            onTap: () => context.go(RouteNames.map),
                           ),
                         ],
                       ),

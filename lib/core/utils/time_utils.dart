@@ -38,6 +38,15 @@ class TimeUtils {
     return nextDay.difference(now);
   }
 
+  /// «N мин назад» для статуса локации
+  static String timeAgo(DateTime date) {
+    final diff = DateTime.now().difference(date);
+    if (diff.inSeconds < 60) return 'только что';
+    if (diff.inMinutes < 60) return '${diff.inMinutes} мин назад';
+    if (diff.inHours < 24) return '${diff.inHours} ч назад';
+    return '${diff.inDays} д назад';
+  }
+
   /// Красивая дата "с нами с..."
   static String formatJoinDate(DateTime date) {
     final months = [
