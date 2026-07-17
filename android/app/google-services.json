@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "694434273021",
+    "project_id": "gohavefun-71489",
+    "storage_bucket": "gohavefun-71489.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:694434273021:android:ff9b1b0f03ffb06ac6d094",
+        "android_client_info": {
+          "package_name": "com.gohavefun.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC3Wpp5ZDSwRRIxYzZGdtQLoStJpTz1VSU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
