@@ -110,7 +110,7 @@ class _CoupleScreenState extends State<CoupleScreen>
                   ],
                 ),
                 child: const Text(
-                  '🚶 Идти гулять',
+                  '🚶 Гуляй',
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 17,

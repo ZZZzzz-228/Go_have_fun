@@ -16,4 +16,5 @@ class RouteNames {
   static const String editProfile = '/profile/edit';
   static const String couple = '/couple';
   static const String coupleStamp = '/couple/stamp';
+  static const String cats = '/cats';
 }

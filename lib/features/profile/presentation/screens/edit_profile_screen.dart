@@ -13,7 +13,6 @@ class EditProfileScreen extends StatefulWidget {
 
 class _EditProfileScreenState extends State<EditProfileScreen> {
   final _nameCtrl = TextEditingController(text: 'Алекс');
-  final _bioCtrl = TextEditingController(text: 'Люблю кофе, велопрогулки и случайные встречи 🚴');
   bool _isSaving = false;
 
   Future<void> _save() async {
@@ -34,7 +33,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   @override
   void dispose() {
     _nameCtrl.dispose();
-    _bioCtrl.dispose();
     super.dispose();
   }
 
@@ -96,43 +94,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               label: 'Имя',
               hint: 'Твоё имя',
               prefixIcon: Icons.person_outline,
-            ),
-            const SizedBox(height: 20),
-
-            // Биография
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'О себе',
-                  style: TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: _bioCtrl,
-                  maxLength: 300,
-                  maxLines: 4,
-                  style: const TextStyle(
-                      color: AppColors.textPrimary, fontSize: 15),
-                  decoration: InputDecoration(
-                    hintText: 'Расскажи о себе...',
-                    hintStyle:
-                        const TextStyle(color: AppColors.textSecondary),
-                    filled: true,
-                    fillColor: AppColors.surfaceVariant,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(14),
-                      borderSide: BorderSide.none,
-                    ),
-                    counterStyle: const TextStyle(
-                        color: AppColors.textSecondary),
-                  ),
-                ),
-              ],
             ),
             const SizedBox(height: 32),
 

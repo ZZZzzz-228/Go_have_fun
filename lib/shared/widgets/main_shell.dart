@@ -5,14 +5,15 @@ import '../../core/router/route_names.dart';
 import '../../core/theme/app_colors.dart';
 import 'app_bottom_nav.dart';
 
-/// Оболочка приложения: контент + компактная нижняя навигация (3 таба).
+/// Оболочка приложения: контент + компактная нижняя навигация (4 таба).
 class MainShell extends ConsumerWidget {
   final Widget child;
   const MainShell({super.key, required this.child});
 
   int _indexForLocation(String loc) {
     if (loc.startsWith(RouteNames.couple)) return 1;
-    if (loc.startsWith(RouteNames.profile)) return 2;
+    if (loc.startsWith(RouteNames.cats)) return 2;
+    if (loc.startsWith(RouteNames.profile)) return 3;
     return 0;
   }
 
@@ -21,6 +22,8 @@ class MainShell extends ConsumerWidget {
       case 1:
         return RouteNames.couple;
       case 2:
+        return RouteNames.cats;
+      case 3:
         return RouteNames.profile;
       default:
         return RouteNames.map;
@@ -31,7 +34,7 @@ class MainShell extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final location = GoRouterState.of(context).uri.toString();
     final currentIndex = _indexForLocation(location);
-    final isMap = currentIndex == 0;
+    final isMap = currentIndex == 0 || currentIndex == 2;
 
     return Scaffold(
       extendBody: true,

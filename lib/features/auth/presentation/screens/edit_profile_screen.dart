@@ -119,29 +119,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       prefixIcon: Icons.person_outline,
                     ),
                     const SizedBox(height: 20),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Align(
-                          alignment: Alignment.centerLeft,
-                          child: Text(
-                            'О себе',
-                            style: TextStyle(
-                              color: AppColors.textSecondary,
-                              fontSize: 13,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        LiquidGlassTextField(
-                          controller: _bioCtrl,
-                          maxLength: 300,
-                          maxLines: 4,
-                          hint: 'Расскажи о себе...',
-                        ),
-                      ],
-                    ),
+                    // Биография убрана из профиля по запросу
+                    const SizedBox.shrink(),
                   ],
                 ),
               ),

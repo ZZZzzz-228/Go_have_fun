@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../core/theme/app_colors.dart';
 
-/// Компактная нижняя навигация: 3 раздела — Карта, Пара, Профиль.
+/// Компактная нижняя навигация: 4 раздела — Карта, Пара, Котики, Профиль.
 class AppBottomNav extends StatelessWidget {
   final int currentIndex;
   final ValueChanged<int> onTap;
@@ -22,7 +22,12 @@ class AppBottomNav extends StatelessWidget {
     _NavItem(
       icon: Icons.favorite_border_rounded,
       activeIcon: Icons.favorite_rounded,
-      label: 'Пара',
+      label: 'Гуляй',
+    ),
+    _NavItem(
+      icon: Icons.pets_outlined,
+      activeIcon: Icons.pets_rounded,
+      label: 'Котики',
     ),
     _NavItem(
       icon: Icons.person_outline_rounded,

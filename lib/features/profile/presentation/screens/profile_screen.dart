@@ -17,7 +17,6 @@ class ProfileScreen extends ConsumerStatefulWidget {
 class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   final String _name = 'Алекс';
   final int _age = 24;
-  final String _bio = 'Люблю кофе, велопрогулки и случайные встречи';
   final bool _isSearchActive = false;
   final DateTime _joinedAt = DateTime(2024, 3, 15);
   final int _meetingsCount = 12;
@@ -30,13 +29,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final initials = _name.isEmpty ? 'A' : _name[0].toUpperCase();
     final days =
         DateTime.now().difference(_joinedAt).inDays;
+    final bottomNavPadding = MediaQuery.paddingOf(context).bottom + 170;
 
     return Scaffold(
       backgroundColor: AppColors.scaffoldBg(context),
       body: SafeArea(
         bottom: false,
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
+          padding: EdgeInsets.fromLTRB(20, 16, 20, bottomNavPadding),
           children: [
             // ===== App Bar =====
             Row(
@@ -130,40 +130,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               ),
             ),
             const SizedBox(height: 28),
-
-            // ===== Био =====
-            if (_bio.isNotEmpty)
-              _ModernCard(
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: AppColors.primary.withValues(alpha: 0.10),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Icon(
-                        Icons.format_quote_rounded,
-                        color: AppColors.primary,
-                        size: 20,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        _bio,
-                        style:
-                        Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            const SizedBox(height: 20),
 
             // ===== Статус-маяк (без эмодзи, иконки) =====
             BeaconSelector(

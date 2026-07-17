@@ -16,6 +16,7 @@ import '../../features/profile/presentation/screens/profile_screen.dart';
 import '../../features/profile/presentation/screens/edit_profile_screen.dart';
 import '../../features/couple/presentation/screens/couple_screen.dart';
 import '../../features/couple/presentation/screens/couple_stamp_screen.dart';
+import '../../features/cats/presentation/screens/cats_map_screen.dart';
 import '../../shared/widgets/main_shell.dart';
 import 'route_names.dart';
 
@@ -102,6 +103,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 builder: (context, state) => const CoupleStampScreen(),
               ),
             ],
+          ),
+          GoRoute(
+            path: RouteNames.cats,
+            name: RouteNames.cats,
+            builder: (context, state) => const CatsMapScreen(),
           ),
         ],
       ),

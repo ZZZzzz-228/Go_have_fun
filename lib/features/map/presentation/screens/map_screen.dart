@@ -87,7 +87,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
             child: _buildMainButton(mapState),
           ),
           Positioned(
-            bottom: 100,
+            bottom: 138,
             left: 16,
             right: 16,
             child: Align(

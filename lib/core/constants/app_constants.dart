@@ -45,6 +45,9 @@ class AppConstants {
   static const String colCouples = 'couples';
   static const String colReports = 'reports';
   static const String colSearchSessions = 'search_sessions';
+  static const String colCatPhotos = 'cat_photos';
+
+  static const String prefKeyCatPhotos = 'cat_photos_local';
 
   // Пагинация
   static const int messagesPageSize = 30;
