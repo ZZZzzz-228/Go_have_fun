@@ -1,17 +1,37 @@
-# go_have_fun
+# Go Have Fun (Kotlin / Jetpack Compose)
 
-A new Flutter project.
+Нативное Android-приложение на Kotlin + Jetpack Compose. Это перенос
+смысла и функциональности приложения "Go Have Fun" (изначально на Flutter)
+на нативный Kotlin.
 
-## Getting Started
+## Что это за приложение
+Соцприложение для знакомств вживую с людьми поблизости прямо сейчас:
+- Карта с людьми рядом (схематичная карта + mock-данные, без внешних API-ключей)
+- Поиск людей с таймером сессии (2 часа)
+- Маячки-статусы («Ищу кофе», «Идём в бар» и т.п.)
+- Режим паники (30 сек невидимости)
+- Чат, который "горит" 15 минут, с ледоколами и продлением +5 мин
+- Экран "чат сгорел"
+- Режим «Пара», лента «Котики», профиль с тёмной темой
 
-This project is a starting point for a Flutter application.
+## Готовый APK
+Файл `GoHaveFun-debug.apk` в корне — можно сразу установить на Android
+(разрешите установку из неизвестных источников).
 
-A few resources to get you started if this is your first Flutter project:
+## Сборка из исходников
+Требуется JDK 17 и Android SDK (compileSdk 35).
+```
+./gradlew assembleDebug
+```
+APK появится в `app/build/outputs/apk/debug/app-debug.apk`.
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+## Стек
+- Kotlin 1.9.24, AGP 8.5.2, Gradle 8.9
+- Jetpack Compose (BOM 2024.09.02), Material 3
+- Navigation Compose, ViewModel + StateFlow
+- minSdk 24, targetSdk 35
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Примечания
+Настоящая карта/геолокация и погодный API из Flutter-версии заменены
+схематичной картой и mock-данными, чтобы приложение работало «из коробки»
+без ключей и внешних сервисов.
