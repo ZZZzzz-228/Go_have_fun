@@ -29,7 +29,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final initials = _name.isEmpty ? 'A' : _name[0].toUpperCase();
     final days =
         DateTime.now().difference(_joinedAt).inDays;
-    final bottomNavPadding = MediaQuery.paddingOf(context).bottom + 170;
+    final bottomNavPadding = MediaQuery.paddingOf(context).bottom + 16;
 
     return Scaffold(
       backgroundColor: AppColors.scaffoldBg(context),

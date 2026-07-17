@@ -54,12 +54,16 @@ class MapState {
   final bool isPanicMode;
   final bool isLoading;
   final String? error;
+  final String currentUserGender;
+  final String? activeMatchUserId;
+  final Set<String> ignoredMatchUserIds;
 
   // Улица и погода (авто-определение)
   final String? streetName;
   final double? temperatureC;
   final String weatherEmoji;
   final bool isLocatingStreet;
+  final String? countryCode;
 
   const MapState({
     this.myLocation,
@@ -72,10 +76,14 @@ class MapState {
     this.isPanicMode = false,
     this.isLoading = false,
     this.error,
+    this.currentUserGender = 'female',
+    this.activeMatchUserId,
+    this.ignoredMatchUserIds = const {},
     this.streetName,
     this.temperatureC,
     this.weatherEmoji = '☀️',
     this.isLocatingStreet = false,
+    this.countryCode,
   });
 
   MapState copyWith({
@@ -89,10 +97,14 @@ class MapState {
     bool? isPanicMode,
     bool? isLoading,
     String? error,
+    String? currentUserGender,
+    String? activeMatchUserId,
+    Set<String>? ignoredMatchUserIds,
     String? streetName,
     double? temperatureC,
     String? weatherEmoji,
     bool? isLocatingStreet,
+    String? countryCode,
   }) =>
       MapState(
         myLocation: myLocation ?? this.myLocation,
@@ -106,10 +118,14 @@ class MapState {
         isPanicMode: isPanicMode ?? this.isPanicMode,
         isLoading: isLoading ?? this.isLoading,
         error: error ?? this.error,
+        currentUserGender: currentUserGender ?? this.currentUserGender,
+        activeMatchUserId: activeMatchUserId ?? this.activeMatchUserId,
+        ignoredMatchUserIds: ignoredMatchUserIds ?? this.ignoredMatchUserIds,
         streetName: streetName ?? this.streetName,
         temperatureC: temperatureC ?? this.temperatureC,
         weatherEmoji: weatherEmoji ?? this.weatherEmoji,
         isLocatingStreet: isLocatingStreet ?? this.isLocatingStreet,
+        countryCode: countryCode ?? this.countryCode,
       );
 }
 
@@ -241,8 +257,18 @@ class MapNotifier extends StateNotifier<MapState> {
         final street = (p.thoroughfare != null && p.thoroughfare!.isNotEmpty)
             ? p.thoroughfare!
             : (p.street ?? p.subLocality ?? p.locality ?? 'Твоё местоположение');
+        final rawCountry = p.isoCountryCode ?? p.country;
+        final normalizedCountry = rawCountry?.toUpperCase();
+        final countryCode = normalizedCountry != null &&
+                (normalizedCountry.contains('RUSS') || normalizedCountry.contains('РОСС'))
+            ? 'RU'
+            : p.isoCountryCode?.toUpperCase();
         if (mounted) {
-          state = state.copyWith(streetName: street, isLocatingStreet: false);
+          state = state.copyWith(
+            streetName: street,
+            isLocatingStreet: false,
+            countryCode: countryCode,
+          );
         }
       } else if (mounted) {
         state = state.copyWith(isLocatingStreet: false);
@@ -317,6 +343,37 @@ class MapNotifier extends StateNotifier<MapState> {
     );
   }
 
+  void setCurrentUserGender(String gender) {
+    state = state.copyWith(currentUserGender: gender);
+  }
+
+  void acceptMatch(String userId) {
+    state = state.copyWith(activeMatchUserId: userId);
+  }
+
+  void skipMatch(String userId) {
+    state = state.copyWith(
+      ignoredMatchUserIds: {...state.ignoredMatchUserIds, userId},
+    );
+  }
+
+  static List<MapUserEntity> filterVisibleUsers({
+    required List<MapUserEntity> users,
+    required String currentUserGender,
+    String? activeMatchUserId,
+    required Set<String> ignoredMatchUserIds,
+  }) {
+    final filteredByGender = users.where((user) {
+      if (ignoredMatchUserIds.contains(user.userId)) return false;
+      if (activeMatchUserId != null) return user.userId == activeMatchUserId;
+      if (currentUserGender == 'male') return user.gender == 'female';
+      if (currentUserGender == 'female') return user.gender == 'male';
+      return true;
+    }).toList();
+
+    return filteredByGender.isEmpty ? [] : [filteredByGender.first];
+  }
+
   /// Режим паники — исчезнуть с карты
   void activatePanic() {
     _searchTimer?.cancel();
@@ -379,7 +436,12 @@ class MapNotifier extends StateNotifier<MapState> {
         headingDegrees: rnd.nextDouble() * 360,
       ));
     }
-    return users;
+    return MapNotifier.filterVisibleUsers(
+      users: users,
+      currentUserGender: state.currentUserGender,
+      activeMatchUserId: state.activeMatchUserId,
+      ignoredMatchUserIds: state.ignoredMatchUserIds,
+    );
   }
 
   List<SafeZone> _generateMockSafeZones(LatLng center) {

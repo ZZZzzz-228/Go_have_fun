@@ -12,6 +12,7 @@ class UserProfileSheet extends StatelessWidget {
   final LatLng? myLocation;
   final VoidCallback onMessage;
   final VoidCallback? onMatch;
+  final VoidCallback? onSkip;
 
   const UserProfileSheet({
     super.key,
@@ -19,6 +20,7 @@ class UserProfileSheet extends StatelessWidget {
     this.myLocation,
     required this.onMessage,
     this.onMatch,
+    this.onSkip,
   });
 
   @override
@@ -194,13 +196,20 @@ class UserProfileSheet extends StatelessWidget {
                   const SizedBox(width: 10),
                   Expanded(
                     child: AppButton(
-                      label: 'Профиль',
-                      icon: Icons.person_rounded,
+                      label: 'Пропустить',
+                      icon: Icons.skip_next_rounded,
                       isOutlined: true,
-                      onTap: () => Navigator.pop(context),
+                      onTap: onSkip ?? () => Navigator.pop(context),
                     ),
                   ),
                 ],
+              ),
+              const SizedBox(height: 10),
+              AppButton(
+                label: 'Профиль',
+                icon: Icons.person_rounded,
+                isOutlined: true,
+                onTap: () => Navigator.pop(context),
               ),
             ],
           ),

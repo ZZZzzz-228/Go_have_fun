@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:uuid/uuid.dart';
 import '../../../../core/router/route_names.dart';
@@ -12,7 +13,6 @@ import '../../domain/entities/location_entity.dart';
 import '../providers/map_provider.dart';
 import '../widgets/beacon_status_sheet.dart';
 import '../widgets/map_user_marker.dart';
-import '../widgets/search_timer_widget.dart';
 import '../widgets/user_profile_sheet.dart';
 
 class MapScreen extends ConsumerStatefulWidget {
@@ -26,6 +26,8 @@ class _MapScreenState extends ConsumerState<MapScreen>
     with SingleTickerProviderStateMixin {
   final MapController _mapController = MapController();
   late AnimationController _pulseController;
+  String? _lastPreviewedUserId;
+  bool _isPreviewSheetOpen = false;
 
   @override
   void initState() {
@@ -51,6 +53,8 @@ class _MapScreenState extends ConsumerState<MapScreen>
     final mapState = ref.watch(mapProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
+    _maybeShowMatchPreview(mapState);
+
     return Scaffold(
       backgroundColor: isDark ? AppColors.darkBackground : AppColors.background,
       body: Stack(
@@ -58,17 +62,8 @@ class _MapScreenState extends ConsumerState<MapScreen>
           _buildMap(context, mapState, isDark),
           _buildTopBar(context, mapState, isDark),
           _buildRightButtons(mapState),
-          if (mapState.isSearchActive)
-            Positioned(
-              top: 190,
-              left: 16,
-              right: 16,
-              child: SearchTimerWidget(
-                remainingSeconds: mapState.searchSecondsRemaining,
-                onStop: () =>
-                    ref.read(mapProvider.notifier).stopSearchSession(),
-              ),
-            ),
+          _buildHourglass(mapState),
+          // Панель "Поиск активен" удалена — управление через песочные часы
           if (mapState.currentBeaconText != null)
             Positioned(
               bottom: 264,
@@ -280,13 +275,43 @@ class _MapScreenState extends ConsumerState<MapScreen>
               tooltip: 'Мой статус',
             ),
             const SizedBox(height: 12),
-            AppMapFab(
-              icon: Icons.warning_amber_rounded,
-              color: AppColors.error.withValues(alpha: 0.15),
-              onTap: _onPanic,
-              tooltip: 'Кнопка паники',
-            ),
+            // Паника доступна только во время активного поиска (гуляй)
+            if (mapState.isSearchActive)
+              AppMapFab(
+                icon: Icons.warning_amber_rounded,
+                color: AppColors.error.withValues(alpha: 0.15),
+                onTap: _onPanic,
+                tooltip: 'Кнопка паники',
+              ),
+            if (!mapState.isSearchActive) const SizedBox.shrink(),
           ],
+        ),
+      ),
+    );
+  }
+
+  // В левом верхнем углу — вращающиеся песочные часы с оставшимся временем
+  Widget _buildHourglass(MapState mapState) {
+    if (!mapState.isSearchActive) return const SizedBox.shrink();
+
+    // Размещаем часы ниже заголовка, чтобы не закрывать улицу/погоду
+    return Positioned(
+      top: 120,
+      left: 16,
+      child: SafeArea(
+        bottom: false,
+        child: GestureDetector(
+          onTap: () {
+            // По тапу выключаем поиск
+            ref.read(mapProvider.notifier).stopSearchSession();
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Поиск остановлен')),
+            );
+          },
+          child: Tooltip(
+            message: 'Нажми, чтобы остановить поиск',
+            child: _HourglassTimer(seconds: mapState.searchSecondsRemaining),
+          ),
         ),
       ),
     );
@@ -313,7 +338,24 @@ class _MapScreenState extends ConsumerState<MapScreen>
     ref.read(mapProvider.notifier).startSearchSession();
   }
 
-  void _onUserTapped(MapUserEntity user) {
+  void _maybeShowMatchPreview(MapState mapState) {
+    if (!mapState.isSearchActive || mapState.isPanicMode) return;
+    if (mapState.nearbyUsers.isEmpty || _isPreviewSheetOpen) return;
+    final candidate = mapState.nearbyUsers.first;
+    if (candidate.userId == _lastPreviewedUserId) return;
+
+    _lastPreviewedUserId = candidate.userId;
+    ref.read(mapProvider.notifier).acceptMatch(candidate.userId);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _showUserPreviewSheet(candidate);
+    });
+  }
+
+  void _showUserPreviewSheet(MapUserEntity user) {
+    if (_isPreviewSheetOpen) return;
+    _isPreviewSheetOpen = true;
     final mapState = ref.read(mapProvider);
 
     showModalBottomSheet(
@@ -323,15 +365,36 @@ class _MapScreenState extends ConsumerState<MapScreen>
       builder: (_) => UserProfileSheet(
         user: user,
         myLocation: mapState.myLocation,
-        onMessage: () => _startChat(user.name),
-        onMatch: () => _startChat(user.name),
+        onMessage: () => _startChat(user),
+        onMatch: () => _startChat(user),
+        onSkip: () => _skipMatch(user),
       ),
-    );
+    ).whenComplete(() {
+      if (mounted) {
+        _isPreviewSheetOpen = false;
+      }
+    });
   }
 
-  void _startChat(String userName) {
-    ref.read(chatVisibilityProvider.notifier).state = true;
+  void _onUserTapped(MapUserEntity user) {
+    ref.read(mapProvider.notifier).acceptMatch(user.userId);
+    _showUserPreviewSheet(user);
+  }
+
+  void _skipMatch(MapUserEntity user) {
+    if (!mounted) return;
     Navigator.pop(context);
+    ref.read(mapProvider.notifier).skipMatch(user.userId);
+    setState(() {
+      _lastPreviewedUserId = null;
+    });
+  }
+
+  void _startChat(MapUserEntity user) {
+    ref.read(chatVisibilityProvider.notifier).state = true;
+    if (Navigator.canPop(context)) {
+      Navigator.pop(context);
+    }
     final chatId = const Uuid().v4();
     context.go('${RouteNames.chat}/$chatId');
   }
@@ -350,7 +413,81 @@ class _MapScreenState extends ConsumerState<MapScreen>
     );
   }
 
+  Future<void> _activatePanic() async {
+    if (!mounted) return;
+    ref.read(chatVisibilityProvider.notifier).state = false;
+    ref.read(mapProvider.notifier).activatePanic();
+
+    final countryCode = ref.read(mapProvider).countryCode;
+    final emergencyNumber = countryCode == 'RU' ? '112' : '911';
+
+    // Перейти явно на экран карты, чтобы избежать возможного черного экрана
+    try {
+      if (mounted) context.go(RouteNames.map);
+    } catch (_) {}
+
+    // Небольшая пауза, чтобы завершились анимации/оверлеи
+    await Future.delayed(const Duration(milliseconds: 300));
+    // Покажем пользователю диалог с предложением перейти в телефон
+    if (!mounted) return;
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.cardBg(ctx),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text('Экстренный вызов', style: Theme.of(ctx).textTheme.headlineSmall),
+        content: Text(
+          'Мы скрыли тебя с карты и завершили чаты. Перейти в телефон, чтобы вызвать службу $emergencyNumber?',
+          style: Theme.of(ctx).textTheme.bodyMedium?.copyWith(color: AppColors.textMuted(ctx)),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              if (Navigator.canPop(ctx)) Navigator.pop(ctx);
+            },
+            child: Text('Отмена', style: TextStyle(color: AppColors.textMuted(ctx))),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.white),
+            onPressed: () async {
+              if (Navigator.canPop(ctx)) Navigator.pop(ctx);
+              try {
+                final launchUri = Uri(scheme: 'tel', path: emergencyNumber);
+                if (await canLaunchUrl(launchUri)) {
+                  await launchUrl(launchUri, mode: LaunchMode.externalApplication);
+                } else {
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Не удалось открыть телефонный набор для $emergencyNumber'), backgroundColor: AppColors.error),
+                    );
+                  }
+                }
+              } catch (e) {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Ошибка при попытке перейти в телефон: $e'), backgroundColor: AppColors.error),
+                  );
+                }
+              }
+            },
+            child: const Text('Перейти в телефон'),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _onPanic() {
+    // Защита: паника работает только если пользователь сейчас в режиме "Гуляй"
+    if (!ref.read(mapProvider).isSearchActive) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Кнопка паники доступна только во время прогулки'),
+          backgroundColor: AppColors.warning,
+        ),
+      );
+      return;
+    }
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
@@ -361,7 +498,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
           style: Theme.of(context).textTheme.headlineSmall,
         ),
         content: Text(
-          'Ты исчезнешь с карты для всех и завершишь все активные чаты. Продолжить?',
+          'Ты исчезнешь с карты для всех, завершишь все активные чаты и перейдёшь к экстренному звонку. Продолжить?',
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                 color: AppColors.textMuted(context),
               ),
@@ -379,15 +516,9 @@ class _MapScreenState extends ConsumerState<MapScreen>
               backgroundColor: AppColors.error,
               foregroundColor: Colors.white,
             ),
-            onPressed: () {
+            onPressed: () async {
               Navigator.pop(context);
-              ref.read(mapProvider.notifier).activatePanic();
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('🔒 Ты в безопасности. Все чаты завершены.'),
-                  backgroundColor: AppColors.success,
-                ),
-              );
+              await _activatePanic();
             },
             child: const Text('Активировать'),
           ),
@@ -441,6 +572,73 @@ class _MyLocationMarker extends StatelessWidget {
           ],
         );
       },
+    );
+  }
+}
+
+// Вращающиеся песочные часы с оставшимся временем (мин:сек)
+class _HourglassTimer extends StatefulWidget {
+  final int seconds;
+  const _HourglassTimer({required this.seconds});
+
+  @override
+  State<_HourglassTimer> createState() => _HourglassTimerState();
+}
+
+class _HourglassTimerState extends State<_HourglassTimer>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1400),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  String _format(int s) {
+    final mm = (s ~/ 60).toString().padLeft(2, '0');
+    final ss = (s % 60).toString().padLeft(2, '0');
+    return '$mm:$ss';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return RotationTransition(
+      turns: _ctrl,
+      child: Container(
+        width: 48,
+        height: 48,
+        decoration: BoxDecoration(
+          color: AppColors.surface.withValues(alpha: 0.9),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppColors.border.withValues(alpha: 0.6)),
+          boxShadow: [
+            BoxShadow(color: Colors.black.withValues(alpha: 0.06), blurRadius: 8),
+          ],
+        ),
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.hourglass_top, size: 16, color: AppColors.textMuted(context)),
+              const SizedBox(height: 2),
+              Text(_format(widget.seconds),
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      )),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
