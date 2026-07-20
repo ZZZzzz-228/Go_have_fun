@@ -6,6 +6,7 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -38,6 +39,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -201,8 +206,10 @@ fun AuthHeader(emoji: String, title: String, subtitle: String) {
         }
         Spacer(Modifier.height(20.dp))
         Text(title, color = AppColors.TextPrimary, fontSize = 28.sp, fontWeight = FontWeight.W800)
-        Spacer(Modifier.height(6.dp))
-        Text(subtitle, color = AppColors.TextSecondary, fontSize = 15.sp, textAlign = TextAlign.Center)
+        if (subtitle.isNotBlank()) {
+            Spacer(Modifier.height(6.dp))
+            Text(subtitle, color = AppColors.TextSecondary, fontSize = 15.sp, textAlign = TextAlign.Center)
+        }
     }
 }
 
@@ -222,8 +229,18 @@ fun LoginScreen(nav: NavController) {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Spacer(Modifier.height(60.dp))
-        AuthHeader("👋", "С возвращением!", "Войди, чтобы продолжить знакомства")
-        Spacer(Modifier.height(36.dp))
+        AuthHeader("👋", "С возвращением!", "")
+        Spacer(Modifier.height(24.dp))
+
+        Image(
+            painter = painterResource(id = com.gohavefun.app.R.drawable.cute_cat),
+            contentDescription = "Милый котик",
+            contentScale = ContentScale.Crop,
+            modifier = Modifier
+                .size(220.dp)
+                .clip(RoundedCornerShape(24.dp))
+        )
+        Spacer(Modifier.height(28.dp))
 
         OutlinedTextField(
             value = email,
@@ -244,10 +261,13 @@ fun LoginScreen(nav: NavController) {
         )
         Spacer(Modifier.height(24.dp))
 
+        val haptic = LocalHapticFeedback.current
+
         AppButton(
             label = "Войти",
             isLoading = loading,
             onClick = {
+                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                 loading = true
                 nav.navigate(Routes.PROFILE_SETUP)
             }
