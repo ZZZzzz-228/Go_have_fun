@@ -118,6 +118,9 @@ Thumbs.db
 
 # Docker
 Dockerfile.local
+
+# Android local SDK settings
+local.properties
 docker-compose.override.yml
 
 # Misc
