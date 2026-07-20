@@ -1,6 +1,8 @@
 ﻿package com.gohavefun.app.ui.screens.map
 
+import android.location.Location
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -26,6 +28,7 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -37,7 +40,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
@@ -45,6 +51,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.gohavefun.app.data.AppConstants
+import com.gohavefun.app.data.MapPhoto
 import com.gohavefun.app.data.MapUser
 import com.gohavefun.app.data.MapViewModel
 import com.gohavefun.app.navigation.Routes
@@ -56,18 +63,27 @@ import kotlin.math.roundToInt
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MapScreen(rootNav: NavController) {
-    val vm: MapViewModel = viewModel()
+    val vm: MapViewModel = viewModel(key = "dating_map")
     val state by vm.state.collectAsState()
+    val context = LocalContext.current
 
     var showBeaconSheet by remember { mutableStateOf(false) }
     var selectedUser by remember { mutableStateOf<MapUser?>(null) }
+    var selectedPhoto by remember { mutableStateOf<MapPhoto?>(null) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
+    LaunchedEffect(context) {
+        vm.loadLastLocation(context)
+    }
+
     Box(modifier = Modifier.fillMaxSize().background(AppColors.SurfaceVariant)) {
-        SchematicMap(
+        MapCanvas(
             state = state,
+            modifier = Modifier.fillMaxSize(),
+            showUsers = true,
+            showPhotos = false,
             onUserTap = { selectedUser = it },
-            modifier = Modifier.fillMaxSize()
+            onPhotoTap = { selectedPhoto = it }
         )
 
         Column(
@@ -171,6 +187,35 @@ fun MapScreen(rootNav: NavController) {
         }
     }
 
+    selectedPhoto?.let { photo ->
+        ModalBottomSheet(
+            onDismissRequest = { selectedPhoto = null },
+            sheetState = sheetState,
+            containerColor = AppColors.Surface
+        ) {
+            Column(modifier = Modifier.fillMaxWidth().padding(20.dp)) {
+                Text("Фото кота", color = AppColors.TextPrimary, fontSize = 20.sp, fontWeight = FontWeight.W800)
+                Spacer(Modifier.height(14.dp))
+                Image(
+                    painter = painterResource(id = photo.imageRes ?: com.gohavefun.app.R.drawable.cute_cat),
+                    contentDescription = photo.caption,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(220.dp)
+                        .clip(RoundedCornerShape(18.dp))
+                        .background(AppColors.SurfaceVariant),
+                    contentScale = ContentScale.Crop
+                )
+                Spacer(Modifier.height(14.dp))
+                Text(photo.caption, color = AppColors.TextPrimary, fontSize = 16.sp)
+                Spacer(Modifier.height(12.dp))
+                Text("${photo.ownerName}, около ${photo.distanceMeters.roundToInt()} м", color = AppColors.TextSecondary, fontSize = 13.sp)
+                Spacer(Modifier.height(20.dp))
+                AppButton(label = "Закрыть", onClick = { selectedPhoto = null })
+            }
+        }
+    }
+
     selectedUser?.let { user ->
         ModalBottomSheet(
             onDismissRequest = { selectedUser = null },
@@ -193,10 +238,13 @@ fun MapScreen(rootNav: NavController) {
 }
 
 @Composable
-private fun SchematicMap(
+fun MapCanvas(
     state: com.gohavefun.app.data.MapState,
-    onUserTap: (MapUser) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    showUsers: Boolean = true,
+    showPhotos: Boolean = true,
+    onUserTap: (MapUser) -> Unit = {},
+    onPhotoTap: (MapPhoto) -> Unit = {}
 ) {
     var boxW by remember { mutableStateOf(0) }
     var boxH by remember { mutableStateOf(0) }
@@ -252,37 +300,62 @@ private fun SchematicMap(
                 }
             }
 
-            state.nearbyUsers.forEach { user ->
-                val px = (user.relX * boxW).roundToInt()
-                val py = (user.relY * boxH).roundToInt()
-                Column(
-                    modifier = Modifier
-                        .offset { IntOffset(px - 26, py - 34) }
-                        .clickable { onUserTap(user) },
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Box(
+            if (showPhotos) {
+                state.photoPins.forEach { photo ->
+                    val px = (photo.relX * boxW).roundToInt()
+                    val py = (photo.relY * boxH).roundToInt()
+                    Column(
                         modifier = Modifier
-                            .size(52.dp)
-                            .clip(CircleShape)
-                            .background(if (user.isFemale) AppColors.Secondary else AppColors.Primary),
-                        contentAlignment = Alignment.Center
+                            .offset { IntOffset(px - 24, py - 24) }
+                            .clickable { onPhotoTap(photo) },
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Text(user.beaconEmoji ?: "🙂", fontSize = 24.sp)
-                    }
-                    Box(
-                        modifier = Modifier
-                            .padding(top = 2.dp)
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(AppColors.Surface)
-                            .padding(horizontal = 6.dp, vertical = 2.dp)
-                    ) {
-                        Text(
-                            "${user.name}, ${user.age}",
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.W600,
-                            color = AppColors.TextPrimary
+                        Image(
+                            painter = painterResource(photo.imageRes ?: com.gohavefun.app.R.drawable.cute_cat),
+                            contentDescription = photo.caption,
+                            modifier = Modifier
+                                .size(44.dp)
+                                .clip(RoundedCornerShape(14.dp))
+                                .background(AppColors.Surface),
+                            contentScale = ContentScale.Crop
                         )
+                    }
+                }
+            }
+
+            if (showUsers) {
+                state.nearbyUsers.forEach { user ->
+                    val px = (user.relX * boxW).roundToInt()
+                    val py = (user.relY * boxH).roundToInt()
+                    Column(
+                        modifier = Modifier
+                            .offset { IntOffset(px - 26, py - 34) }
+                            .clickable { onUserTap(user) },
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(52.dp)
+                                .clip(CircleShape)
+                                .background(if (user.isFemale) AppColors.Secondary else AppColors.Primary),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(user.beaconEmoji ?: "🙂", fontSize = 24.sp)
+                        }
+                        Box(
+                            modifier = Modifier
+                                .padding(top = 2.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(AppColors.Surface)
+                                .padding(horizontal = 6.dp, vertical = 2.dp)
+                        ) {
+                            Text(
+                                "${user.name}, ${user.age}",
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.W600,
+                                color = AppColors.TextPrimary
+                            )
+                        }
                     }
                 }
             }

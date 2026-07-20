@@ -363,9 +363,9 @@ fun ProfileSetupScreen(nav: NavController) {
             .padding(24.dp)
     ) {
         Spacer(Modifier.height(50.dp))
-        Text("Расскажи о себе", color = AppColors.TextPrimary, fontSize = 26.sp, fontWeight = FontWeight.W800)
+        Text("Настрой профиль", color = AppColors.TextPrimary, fontSize = 26.sp, fontWeight = FontWeight.W800)
         Spacer(Modifier.height(6.dp))
-        Text("Это увидят люди рядом", color = AppColors.TextSecondary, fontSize = 14.sp)
+        Text("Добавь информацию, чтобы лучше отображаться на карте", color = AppColors.TextSecondary, fontSize = 14.sp)
         Spacer(Modifier.height(28.dp))
 
         OutlinedTextField(

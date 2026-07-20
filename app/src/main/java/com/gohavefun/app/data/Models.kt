@@ -23,6 +23,17 @@ data class MapUser(
         get() = if (beaconEmoji != null && beaconText != null) "$beaconEmoji $beaconText" else "🚶 Гуляю"
 }
 
+data class MapPhoto(
+    val id: String,
+    val userId: String,
+    val ownerName: String,
+    val caption: String,
+    val imageRes: Int?,
+    val distanceMeters: Double,
+    val relX: Float,
+    val relY: Float,
+)
+
 /** Безопасная зона (кофейня/бар/парк). */
 data class SafeZone(
     val id: String,

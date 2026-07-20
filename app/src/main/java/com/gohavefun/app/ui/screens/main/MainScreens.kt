@@ -1,5 +1,6 @@
 ﻿package com.gohavefun.app.ui.screens.main
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -20,9 +21,12 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -33,23 +37,29 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import kotlin.math.roundToInt
 import com.gohavefun.app.data.AppConstants
+import com.gohavefun.app.data.MapPhoto
+import com.gohavefun.app.data.MapViewModel
 import com.gohavefun.app.data.ThemeViewModel
 import com.gohavefun.app.navigation.Routes
 import com.gohavefun.app.ui.components.AppButton
 import com.gohavefun.app.ui.components.AppCard
-import com.gohavefun.app.ui.components.CatListItem
 import com.gohavefun.app.ui.components.FeatureRow
 import com.gohavefun.app.ui.components.IconBadge
 import com.gohavefun.app.ui.components.ScreenContainer
 import com.gohavefun.app.ui.components.SectionHeader
 import com.gohavefun.app.ui.components.SettingRow
 import com.gohavefun.app.ui.components.StatCard
+import com.gohavefun.app.ui.screens.map.MapCanvas
 import com.gohavefun.app.ui.screens.map.MapScreen
 import com.gohavefun.app.ui.theme.AppColors
 
@@ -165,23 +175,62 @@ fun CoupleScreen(onOpenMap: () -> Unit) {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CatsScreen() {
-    val cats = listOf(
-        Triple("🐱", "Барсик", "Ищет хозяина для игр"),
-        Triple("🐈", "Мурка", "Обожает солнечные подоконники"),
-        Triple("😺", "Рыжик", "Мастер сбивать вещи со стола"),
-        Triple("🐈‍⬛", "Уголёк", "Ночной охотник за лазером"),
-        Triple("😻", "Ласка", "Мурчит громче холодильника"),
-    )
-    ScreenContainer(modifier = Modifier.verticalScroll(rememberScrollState())) {
+    val vm: MapViewModel = viewModel(key = "cats_map")
+    val state by vm.state.collectAsState()
+    var selectedPhoto by remember { mutableStateOf<MapPhoto?>(null) }
+
+    Column(modifier = Modifier.fillMaxSize().background(AppColors.Background)) {
         Column(modifier = Modifier.statusBarsPadding().padding(20.dp)) {
-            SectionHeader("Котики дня 🐾", "Немного тепла, пока ищешь встречу")
-            Spacer(Modifier.height(16.dp))
-            cats.forEach { (emoji, name, desc) ->
-                CatListItem(emoji, name, desc)
+            SectionHeader("Котики на карте 🐾", "Смотри фото котов рядом и добавляй своё")
+            Spacer(Modifier.height(14.dp))
+        }
+        Box(modifier = Modifier.weight(1f).padding(horizontal = 16.dp)) {
+            MapCanvas(
+                state = state,
+                modifier = Modifier.fillMaxSize(),
+                showUsers = false,
+                showPhotos = true,
+                onPhotoTap = { selectedPhoto = it }
+            )
+        }
+        Spacer(Modifier.height(12.dp))
+        AppButton(
+            label = "Сфотографировать кота",
+            emoji = "📸",
+            onClick = { vm.addCatPhoto("Фото моего кота рядом") }
+        )
+        Spacer(Modifier.height(20.dp))
+    }
+
+    if (selectedPhoto != null) {
+        ModalBottomSheet(
+            onDismissRequest = { selectedPhoto = null },
+            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+            containerColor = AppColors.Surface
+        ) {
+            Column(modifier = Modifier.fillMaxWidth().padding(20.dp)) {
+                Text("Фото кота", color = AppColors.TextPrimary, fontSize = 20.sp, fontWeight = FontWeight.W800)
+                Spacer(Modifier.height(14.dp))
+                Image(
+                    painter = painterResource(id = selectedPhoto!!.imageRes ?: com.gohavefun.app.R.drawable.cute_cat),
+                    contentDescription = selectedPhoto!!.caption,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(220.dp)
+                        .clip(RoundedCornerShape(18.dp))
+                        .background(AppColors.SurfaceVariant),
+                    contentScale = ContentScale.Crop
+                )
+                Spacer(Modifier.height(14.dp))
+                Text(selectedPhoto!!.caption, color = AppColors.TextPrimary, fontSize = 16.sp)
+                Spacer(Modifier.height(12.dp))
+                Text("${selectedPhoto!!.ownerName}, около ${selectedPhoto!!.distanceMeters.roundToInt()} м", color = AppColors.TextSecondary, fontSize = 13.sp)
+                Spacer(Modifier.height(20.dp))
+                AppButton(label = "Закрыть", onClick = { selectedPhoto = null })
             }
-            Spacer(Modifier.height(24.dp))
         }
     }
 }
