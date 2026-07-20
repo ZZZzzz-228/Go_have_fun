@@ -89,6 +89,9 @@ log/
 /build
 /.cache
 
+# Gradle
+.gradle/
+
 # Testing
 /coverage
 /.nyc_output
